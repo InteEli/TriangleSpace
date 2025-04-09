@@ -1,12 +1,20 @@
 
 ---
-title: "Dev Blog 1"
-date: "2025-04-01"
+title: version 0.0.2
+date: "2025-04-09"
 ---
 
 # Hello 👋
 
 Welcome to my first devblog post!
-Each post is written in MDX format, which allows you to use Svelte components inside your posts - such as this CodeBlock. 
+So far I have added the drag and drop functions, adding text and moving them. I have also started with the resizing but that is proving alot harder then anything else.
+The code I used is very Java Script heavy. Thats why 
+I have had some help from my trusted companion copilot but mostly when bugfixing because I try to minimize AI use. I have also gotten from help from the internet and websites like stackoverflow.
+## Changes 
+The following changes and implementations have been made in that version of the project:<br>
+*Drag and drop functions* <br>
+*Basic Styling*
+## Features
+✅ Drag and drop    
+✅ Change text
 <br>
-Each post needs to have a title and a date in the frontmatter, between the --- tags.

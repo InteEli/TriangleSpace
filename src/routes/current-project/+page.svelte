@@ -12,6 +12,7 @@ let items = [{name: "header 1", height: 5, width: 20, type: "text"},
 let itemsInGrid = [];
 let scrollY = 0;
 let mousedown = false;
+let dragDirection = "none";
 let gridElement;
 let selectType = "none";
 
@@ -22,6 +23,7 @@ function getSelectedItem(item){
 }
 function placeItem(item){
     selectedItem = calPos(item);
+    console.log(selectedItem);
     if(selectedItem != null && selectedItem.name != "none"){
         itemsInGrid = [...itemsInGrid,selectedItem];
         selectedItem =  {name : "none", height: 0, width: 0 , start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none"};
@@ -49,12 +51,71 @@ function getNewGrid(x,y){
     }}
     return gridArr;}
 function updateMousePos(cellId){
-    mouseGridPos = cellId;}
+    mouseGridPos = cellId;
+
+    if (selectType == "itemPlace" && selectedItem.name != "none" && mousedown == true){
+        let newStart = selectedItem.start;
+        let newEnd = selectedItem.end;
+        let newWidth = selectedItem.width;
+        let newHeight = selectedItem.height;
+        if(dragDirection ==  "upleft"){
+        newStart = cellId;
+        newHeight = selectedItem.height + (selectedItem.start.y - cellId.y);
+        newWidth = selectedItem.width + (selectedItem.start.x - cellId.x);
+        }
+        else if(dragDirection == "up"){
+            newStart = {x: selectedItem.start.x, y: cellId.y};    
+            newHeight = selectedItem.height + (selectedItem.start.y - cellId.y);
+        }
+        else if(dragDirection == "upright"){
+            newStart = {x: selectedItem.start.x, y: cellId.y};
+            newEnd = {x: cellId.x, y: selectedItem.end.y};
+            newHeight = selectedItem.height + (selectedItem.start.y - cellId.y);
+            newWidth = selectedItem.width + (cellId.x - selectedItem.end.x);
+        }
+        else if(dragDirection == "left"){
+            newStart = {x: cellId.x, y: selectedItem.start.y};
+            newWidth = selectedItem.width + (selectedItem.start.x - cellId.x);
+        }
+        else if(dragDirection == "right"){
+            newEnd = {x: cellId.x, y: selectedItem.end.y};
+            newWidth = (selectedItem.end.x + cellId.x);
+        }
+        else if(dragDirection == "downleft"){
+            newStart = {x: cellId.x, y: selectedItem.start.y};
+            newEnd = {x: selectedItem.end.x, y: cellId.y};
+            newWidth = selectedItem.width + (selectedItem.start.x - cellId.x);
+            newHeight = selectedItem.height + (cellId.y - selectedItem.end.y);
+        }
+        else if(dragDirection == "down"){
+            newEnd = {x: selectedItem.end.x, y: cellId.y};
+            newHeight = selectedItem.height + (cellId.y - selectedItem.end.y);
+        }
+        else if(dragDirection == "downright"){
+            newEnd = {x: cellId.x, y: cellId.y};
+            newHeight = selectedItem.height + (cellId.y - selectedItem.end.y);
+            newWidth = selectedItem.width + (cellId.x - selectedItem.end.x);
+        }
+        itemsInGrid[itemsInGrid.indexOf(selectedItem)] = {name : selectedItem.name , height: newHeight, width: newWidth, start: newStart, end: newEnd, type: selectedItem.type};
+        itemsInGrid = [...itemsInGrid]
+    }
+}
 
 function selectPlacedItem(item){
     if(selectedItem != item){// väljer vid ett click
         selectedItem = item;
-        selectType = "itemSelect";}}
+        selectType = "itemSelect";
+    }
+    else if(selectedItem == item){
+        setTimeout(() => {
+            if (mousedown == true && selectType == "itemSelect") {
+                selectType = "itemPlace";
+                itemsInGrid = itemsInGrid.filter(i => i != item);
+            }
+        }, 170);
+
+    }
+}
 function changeText(item){// ändrar text vid dubbel click
     selectedItem = item;
     selectType = "itemText"
@@ -63,6 +124,13 @@ function changeText(item){// ändrar text vid dubbel click
     input.focus();
     input.select();}
 
+function changeSize(item, Direction){
+    selectedItem = item;
+    selectType = "itemSize";
+    dragDirection = Direction;
+}
+
+
 //https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event
 onMount(() => {
         window.addEventListener("mousemove", (event) => {
@@ -70,6 +138,16 @@ onMount(() => {
         });
         window.addEventListener("mousedown", (event) => {
             mousedown = true;
+            if(selectType == "itemText"){
+                var textElement = document.getElementById({selectedItem});
+                if(document.activeElement === textElement){ // https://stackoverflow.com/questions/36430561/how-can-i-check-if-my-element-id-has-focus
+                selectType = "itemText";}
+                else if(document.activeElement !== textElement){
+                    selectType = "itemSelect";
+                }
+
+            }
+
         });
         window.addEventListener("mouseup", (event) => {
             mousedown = false;
@@ -77,7 +155,9 @@ onMount(() => {
                 placeItem(selectedItem);
                 selectType = "none";
             }
-            
+            else if(selectType == "itemSize"){
+                selectType = "none";
+            }
         });
         
         if (gridElement) {//copilot suggested this
@@ -111,6 +191,16 @@ onMount(() => {
             <div class = "item" class:selected = {item == selectedItem} style="width:{item.width *20}px; height:{item.height*20}px; top: {(item.start.y*20) + gridStart.y}px; left: {(item.start.x *20) + gridStart.x}px; background-color: lightblue; position: absolute;">
                 <input type="text" value={item.name} on:input={(e) => item.name = e.target.value} class = "textInput" id = {item}/>
                 <input type="button" on:mousedown={() => selectPlacedItem(item)} style="height: 100%; width: 100%; position: absolute;" on:dblclick={() => changeText(item)}/>   
+                <div class:invisible = {item != selectedItem} style="height: 100%; width: 100%;">
+                    <input type="button" on:mousedown={() => changeSize(item, "upleft")} style= "top: {- 5}px; left: {- 5}px;" class = "sizeButton"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "up")} style= "top: {- 5}px; left: {(item.width*20/2)}px;" class = "sizeButton"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "upright")} style= "top: {- 5}px; left: {- 8 + item.width*20}px;" class = "sizeButton"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "left")} style= "top: {item.height*10-8}px; left: {- 5}px;" class = "sizeButton"/>  
+                    <input type="button" on:mousedown={() => changeSize(item, "right")} style= "top: { item.height*10-8}px; left: { -8 + item.width*20}px;" class = "sizeButton"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "downleft")} style= "top: {+ item.height*20 -8}px; left: {- 5}px;" class = "sizeButton"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "down")} style= "top: {+ item.height*20 - 8}px; left: {+ item.width*10}px;" class = "sizeButton"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "downright")} style= "top: {+ item.height*20 -8}px; left: {-8 + item.width*20}px;" class = "sizeButton" />
+                </div>
             </div>
             {/each}
         </section>
@@ -163,6 +253,13 @@ onMount(() => {
         height: 100%;
         width: 100%;
     }
+    .sizeButton{
+        position: absolute;
+        background-color: rgb(0, 17, 255);
+        border: 1px solid black;
+        width: 10px;
+        height: 10px;
+    }
     .cell{
         border: 1px dashed black;
         width: 20px;
@@ -184,7 +281,7 @@ onMount(() => {
         display: none;
     }
     .selected{
-        border: 4px dashed black;
+        border: 2px solid rgb(0, 17, 255);
     }
     .textInput{
         width: 100%;
