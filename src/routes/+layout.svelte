@@ -24,6 +24,7 @@
 <nav>
 <a href="{base}/">Home</a>
 <a href="{base}/current-project">Current Project</a>
+<a href="{base}/dev-blog">Dev Log</a>
 </nav>
 
 <style>

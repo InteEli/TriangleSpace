@@ -1,0 +1,12 @@
+
+---
+title: "Dev Blog 1"
+date: "2025-04-01"
+---
+
+# Hello 👋
+
+Welcome to my first devblog post!
+Each post is written in MDX format, which allows you to use Svelte components inside your posts - such as this CodeBlock. 
+<br>
+Each post needs to have a title and a date in the frontmatter, between the --- tags.
