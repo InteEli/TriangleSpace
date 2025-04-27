@@ -5,6 +5,7 @@ let gridArr = getNewGrid(gridSize.x, gridSize.y);
 let mouseGridPos = {x: 0, y: 0};
 let mousePos = {x: 0, y: 0};
 let gridStart = {x: 0, y: 0};
+let placementOffset = {x: 0, y: 0};
 let lastUsedId = 1;
 let selectedItem = {name : "none", height: 0, width: 0, start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none", id : 0};
 let items = [{name: "header 1", height: 5, width: 20, type: "text", id: 0}, 
@@ -25,6 +26,7 @@ function getSelectedItem(item){
 function placeItem(item){
     selectedItem = calPos(item);
     if(selectedItem != null && selectedItem.name != "none"){
+        placementOffset = {x: 0, y: 0}; 
         itemsInGrid = [...itemsInGrid,selectedItem];
         selectedItem =  {name : "none", height: 0, width: 0 , start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none", id: 0};
         //console.log(itemsInGrid);
@@ -34,7 +36,7 @@ function placeItem(item){
     }
 }
 function calPos(Item){
-    let start = mouseGridPos;
+    let start = {x: mouseGridPos.x - Math.floor(placementOffset.x /20), y: mouseGridPos.y - Math.floor((placementOffset.y  - scrollY) /20) };
     let end = {x: start.x + Item.width, y: start.y + Item.height};
     if (end.x < gridSize.x-1 && end.y < gridSize.y-1){
         let newId = Item.id;
@@ -98,33 +100,42 @@ function updateMousePos(){
             newHeight = cellId.y - selectedItem.start.y + 1;
             newWidth = cellId.x - selectedItem.start.x + 1;
         }
-        let index = itemsInGrid.indexOf(selectedItem);
+        if (
+            newStart.x !== selectedItem.start.x ||
+            newStart.y !== selectedItem.start.y ||
+            newWidth !== selectedItem.width ||
+            newHeight !== selectedItem.height
+        ) {
+        let index = itemsInGrid.findIndex(i => i.id === selectedItem.id);
+        if (index !== -1) {
         itemsInGrid[index] = {name : selectedItem.name , height: newHeight, width: newWidth, start: newStart, end: newEnd, type: selectedItem.type, id: selectedItem.id};
-        itemsInGrid = [...itemsInGrid]
         selectedItem = itemsInGrid[index]
+        }
+        }
     }
 }
 
 function selectPlacedItem(item){
-    if(selectedItem != item){// väljer vid ett click
+    if(selectedItem != item){// select on click
         selectedItem = item;
         selectType = "itemSelect";
     }
-    else if(selectedItem == item && selectType == "itemSelect"){// ändrar text vid ett till click
+    else if(selectedItem == item && selectType == "itemSelect"){// changes text when clicked again
         changeText(item);
     }
 }
 function rePlaceItem(item) {
     if (selectType === "itemSelect") {
         selectType = "itemPlace";
-        const index = itemsInGrid.findIndex(i => i === item);
+        console.log(scrollY)
+        placementOffset = { x: mousePos.x - item.start.x * 20 - gridStart.x, y: mousePos.y + scrollY - item.start.y * 20 - gridStart.y}; // offset for placement
+        const index = itemsInGrid.findIndex(i => i.id === item.id);;
         if (index !== -1) {
-            itemsInGrid.splice(index, 1); 
-            itemsInGrid = [...itemsInGrid];
+            itemsInGrid.splice(index, 1); // Remove the item directly
         }
     }
 }
-function changeText(item){// ändrar text vid dubbel click
+function changeText(item){// changes text when double clicked
     selectedItem = item;
     selectType = "itemText"
     const input = document.getElementById(String(item.id)); //https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/select
@@ -144,15 +155,19 @@ onMount(() => {
 
     let animationFrame; //copilot suggested this to stop freezeing
 
-function update() {
-    if (mousedown) {
-        updateMousePos();
-        animationFrame = requestAnimationFrame(update);
+    function update() {
+    if (mousedown && selectType === "itemSize") {
+        updateMousePos(); 
+        animationFrame = requestAnimationFrame(update); 
+    } else {
+        cancelAnimationFrame(animationFrame);
     }
 }
+
         window.addEventListener("mousemove", (event) => {
             mousePos = { x: event.clientX, y: event.clientY };
         });
+
         window.addEventListener("mousedown", (event) => {
             mousedown = true;
             if(selectType == "itemText"){
@@ -164,13 +179,15 @@ function update() {
                 }
 
             }
+            if (selectType == "itemSize"){
             animationFrame = requestAnimationFrame(update);
+            }
         });
-
         window.addEventListener("mouseup", (event) => {
             mousedown = false;
             cancelAnimationFrame(animationFrame);
             if (selectType == "itemPlace") {
+                updateMousePos();
                 placeItem(selectedItem);
                 selectType = "itemSelect";
             }
@@ -212,14 +229,14 @@ function update() {
                 <input type="text" value={item.name} on:input={(e) => item.name = e.target.value} class = "textInput" id = {String(item.id)}/>
                 <input type="button" on:mousedown={() => selectPlacedItem(item)} style="height: 100%; width: 100%; position: absolute;" on:dblclick={() => changeText(item)}/>   
                 <div class:invisible = {item != selectedItem} style="height: 100%; width: 100%;">
-                    <input type="button" on:mousedown={() => changeSize(item, "upleft")} style= "top: {- 5}px; left: {- 5}px;" class = "sizeButton"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "up")} style= "top: {- 5}px; left: {(item.width*20/2)}px;" class = "sizeButton"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "upright")} style= "top: {- 5}px; left: {- 8 + item.width*20}px;" class = "sizeButton"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "left")} style= "top: {item.height*10-8}px; left: {- 5}px;" class = "sizeButton"/>  
-                    <input type="button" on:mousedown={() => changeSize(item, "right")} style= "top: { item.height*10-8}px; left: { -8 + item.width*20}px;" class = "sizeButton"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "downleft")} style= "top: {+ item.height*20 -8}px; left: {- 5}px;" class = "sizeButton"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "down")} style= "top: {+ item.height*20 - 8}px; left: {+ item.width*10}px;" class = "sizeButton"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "downright")} style= "top: {+ item.height*20 -8}px; left: {-8 + item.width*20}px;" class = "sizeButton" />
+                    <input type="button" on:mousedown={() => changeSize(item, "upleft")} style= "top: {- 5}px; left: {- 5}px;" class = "sizeButton" id = "upleft"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "up")} style= "top: {- 5}px; left: {(item.width*20/2)}px;" class = "sizeButton" id = "up"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "upright")} style= "top: {- 5}px; left: {- 8 + item.width*20}px;" class = "sizeButton" id = "upright"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "left")} style= "top: {item.height*10-8}px; left: {- 5}px;" class = "sizeButton" id = "left"/>  
+                    <input type="button" on:mousedown={() => changeSize(item, "right")} style= "top: { item.height*10-8}px; left: { -8 + item.width*20}px;" class = "sizeButton" id = "right"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "downleft")} style= "top: {+ item.height*20 -8}px; left: {- 5}px;" class = "sizeButton" id = "downleft"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "down")} style= "top: {+ item.height*20 - 8}px; left: {+ item.width*10}px;" class = "sizeButton" id = "down"/>
+                    <input type="button" on:mousedown={() => changeSize(item, "downright")} style= "top: {+ item.height*20 -8}px; left: {-8 + item.width*20}px;" class = "sizeButton"id ="downright"/>
                 </div>
             </div>
             {/each}
@@ -231,7 +248,7 @@ function update() {
     </article>
 </main>
 
-<aside class="selectedItem" class:invisible = {selectedItem.name == "none" || mousedown == false || selectType != "itemPlace"} style="top: {mousePos.y + scrollY}px; left: {mousePos.x}px; height: {selectedItem.height *20}px; width: {selectedItem.width*20}px;" >
+<aside class="selectedItem" class:invisible = {selectedItem.name == "none" || mousedown == false || selectType != "itemPlace"} style="top: {mousePos.y + scrollY - placementOffset.y}px; left: {mousePos.x - placementOffset.x}px; height: {selectedItem.height *20}px; width: {selectedItem.width*20}px;" >
     <h2>{selectedItem.name}</h2>
 </aside>
 
@@ -322,5 +339,29 @@ function update() {
     .border:hover{
         border: 5px solid rgb(0, 17, 255);
         cursor: move;
+    }
+    #upleft{
+        cursor: nw-resize;
+    }
+    #up{
+        cursor: n-resize;
+    }
+    #upright{
+        cursor: ne-resize;
+    }
+    #left{
+        cursor: w-resize;
+    }
+    #right{
+        cursor: e-resize;
+    }
+    #downleft{
+        cursor: sw-resize;
+    }
+    #down{
+        cursor: s-resize;
+    }
+    #downright{
+        cursor: se-resize;
     }
 </style>
