@@ -1,0 +1,23 @@
+---
+title: version 0.0.8
+date: "2025-05-07"
+---
+
+# Howdy 👋
+I have added many things such as resizing and automatic resizing of font when changing the container area🎂🎂🎂. That was very hard to implement 
+but luckily i found an API that helped with it.🎉🎉 I have also added basic image placing and working on adding cropping to image but it's not easy😢😢. I use a 
+file reader API😎 to take in image out of a user submitted file. Color changes are also added but that wasn't very hard 👍👍👍👍👍👍. 
+
+## Changes 
+The following changes and implementations have been made in that version of the project:<br>
+*Resizing* <br>
+*Color support*
+*Bug fixes*
+*Better user experience*
+*More text options*
+## Features
+✅ Resizing
+✅ Adding images
+✅ Color picker
+✅ Automatic and manuall font size
+<br>
