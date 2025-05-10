@@ -11,10 +11,10 @@ file reader API😎 to take in image out of a user submitted file. Color changes
 ## Changes 
 The following changes and implementations have been made in that version of the project:<br>
 *Resizing* <br>
-*Color support*
-*Bug fixes*
-*Better user experience*
-*More text options*
+*Color support* <br>
+*Bug fixes* <br>
+*Better user experience*<br>
+*More text options*<br>
 ## Features
 ✅ Resizing
 ✅ Adding images

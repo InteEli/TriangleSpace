@@ -1,7 +1,8 @@
 <script>
 import { onMount } from 'svelte';
 import {currentTheme} from '$lib/theme-storage'; //https://www.reddit.com/r/sveltejs/comments/15p6t4w/how_do_i_use_different_themes_with_skeleton_ui/
-import textFit from 'textfit'; //
+import textFit from 'textfit'; 
+	import { base } from '$app/paths';
 let gridSize = {x: 60, y: 80};
 let gridArr = getNewGrid(gridSize.x, gridSize.y);
 let mouseGridPos = {x: 0, y: 0};
@@ -10,15 +11,15 @@ let gridStart = {x: 0, y: 0};
 let placementOffset = {x: 0, y: 0};
 let lastUsedId = 1;
 let currentlySelectedImage = File;
-let selectedItem = {name : "none", height: 0, width: 0, start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none", id : 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src: ""};
-let resetSelectedItem = {name : "none", height: 0, width: 0, start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none", id : 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src: ""};
-let items = [{name: "header 1", height: 5, width: 20, type: "text", id: 0, fontSize: "95px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src: ""}, 
-    {name: "header 2", height: 4, width: 16, type: "text", id: 0, fontSize: "75px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:""},
-    {name: "header 3", height: 2, width: 8, type: "text", id: 0, fontSize: "45px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:""}, 
-    {name: "text 1", height: 20, width: 40, type: "text", id: 0, fontSize: "45px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:""},
-    {name: "text 2", height: 10, width: 20, type: "text", id: 0, fontSize: "35px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:""},
-    {name: "text 3", height: 10, width: 10, type: "text", id: 0, fontSize: "25px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:""},
-    {name: "image", height: 30, width: 30, type: "image", id: 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:""}];
+let selectedItem = {name : "none", height: 0, width: 0, start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none", id : 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src: "", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}};
+let resetSelectedItem = {name : "none", height: 0, width: 0, start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: "none", id : 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src: "", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}};
+let items = [{name: "header 1", height: 5, width: 20, type: "text", id: 0, fontSize: "95px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src: "", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}},
+    {name: "header 2", height: 4, width: 16, type: "text", id: 0, fontSize: "75px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}},
+    {name: "header 3", height: 2, width: 8, type: "text", id: 0, fontSize: "45px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}}, 
+    {name: "text 1", height: 20, width: 40, type: "text", id: 0, fontSize: "45px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}},
+    {name: "text 2", height: 10, width: 20, type: "text", id: 0, fontSize: "35px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}},
+    {name: "text 3", height: 10, width: 10, type: "text", id: 0, fontSize: "25px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}},
+    {name: "image", height: 30, width: 30, type: "image", id: 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}}];
 let itemsInGrid = [];
 let scrollY = 0;
 let mousedown = false;
@@ -31,7 +32,7 @@ function getSelectedItem(item){
     selectedItem = {name: selected.name, height: selected.height, width: selected.width, 
         start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: selected.type, id: selected.id, 
         fontSize: selected.fontSize, changeFontManually: selected.changeFontManually, 
-        font: selected.font, color: selected.color, backgroundColor: selected.backgroundColor, src: selected.src};
+        font: selected.font, color: selected.color, backgroundColor: selected.backgroundColor, src: selected.src, cropValues: selected.cropValues};
     selectType = "itemPlace";
 }
 function placeItem(item){
@@ -49,7 +50,7 @@ function placeItem(item){
     }
 }
 function calPos(Item){
-    let start = {x: mouseGridPos.x - Math.floor(placementOffset.x /20), y: mouseGridPos.y - Math.floor((placementOffset.y) /20) };
+    let start = {x: mouseGridPos.x - Math.floor(placementOffset.x /20), y: mouseGridPos.y - Math.floor((placementOffset.y) /20)};
     let end = {x: start.x + Item.width, y: start.y + Item.height};
     if (end.x < gridSize.x && end.y < gridSize.y){ 
         let newId = Item.id;
@@ -59,7 +60,7 @@ function calPos(Item){
         }
         return {name: Item.name, height: Item.height, width: Item.width, start: start, end: end, 
             type: Item.type, id: newId, fontSize: Item.fontSize, changeFontManually: Item.changeFontManually, 
-            font: Item.font, color: Item.color, backgroundColor: Item.backgroundColor, src: Item.src};
+            font: Item.font, color: Item.color, backgroundColor: Item.backgroundColor, src: Item.src, cropValues: Item.cropValues};
     }
     else{
         return null;}}
@@ -83,6 +84,7 @@ function updateMousePos(){
             let newEnd = selectedItem.end;
             let newWidth = selectedItem.width;
             let newHeight = selectedItem.height;
+
             if (dragDirection == "upleft") {//copilot helped with bugfixing this 
                 if (cellId.x < selectedItem.end.x && cellId.y < selectedItem.end.y) {
                 newStart = cellId;
@@ -136,14 +138,14 @@ function updateMousePos(){
                 } // Update the font size when the contaiener size changes
                 itemsInGrid[index] = {name : selectedItem.name , height: newHeight, width: newWidth, start: newStart, end: newEnd, type: selectedItem.type, 
                     id: selectedItem.id, fontSize: selectedItem.fontSize, changeFontManually: selectedItem.changeFontManually, font: selectedItem.font, 
-                    color: selectedItem.color, backgroundColor: selectedItem.backgroundColor, src: selectedItem.src};
-                if (selectedItem.type == "image"){
-                    updateImageSize(selectedItem, newWidth, newHeight);
-                    if (selectType == "cropImage" ){
-                        cropImage(selectedItem, selectedItem.start.x * 20 + gridStart.x, selectedItem.start.y * 20 + gridStart.y, newWidth * 20, newHeight * 20);
+                    color: selectedItem.color, backgroundColor: selectedItem.backgroundColor, src: selectedItem.src, cropValues: selectedItem.cropValues};
+                selectedItem = itemsInGrid[index]
+                if (selectedItem.type == "image" && selectType != "cropImage"){
+                    updateImageSize(selectedItem, selectedItem.width, selectedItem.height);
                 }
+                if(selectedItem.type == "image" && selectType == "cropImage"){
+                    cropImage(selectedItem);
                 }
-
                 selectedItem = itemsInGrid[index]
             }}}}}
 
@@ -223,13 +225,21 @@ function updateBackgroundColor(item, backgroundColor) {
 
 function addImage(selected){
     setTimeout(() =>{
-    var canvas = document.getElementById(-selected.id); 
-    var context = canvas.getContext('2d');
     let fr = new FileReader(); // https://stackoverflow.com/questions/3814231/loading-an-image-to-a-img-from-input-file
     fr.onload = function () {
         let img = document.getElementById(String(selected.id))
         let index = itemsInGrid.findIndex(i => i.id === selected.id);
-
+        setTimeout(() => {
+        itemsInGrid[index].width = Math.floor(img.width / 20);
+        itemsInGrid[index].height = Math.floor(img.height / 20);
+        img.width = itemsInGrid[index].width * 20;
+        img.height = itemsInGrid[index].height * 20;
+        itemsInGrid[index].cropValues.baseWidth = selected.width;
+        itemsInGrid[index].cropValues.baseHeight = selected.height;
+        itemsInGrid[index].cropValues.cropStart.x = selected.start.x;
+        itemsInGrid[index].cropValues.cropStart.y = selected.start.y;
+        selectedItem = itemsInGrid[index];
+        }, 0);
         if (selected.src != ""){
             img.src = selected.src;
         }
@@ -237,47 +247,41 @@ function addImage(selected){
             img.src = fr.result;
             itemsInGrid[index].src = fr.result;
         }
-
-        setTimeout(() => {
-        itemsInGrid[index].width = Math.floor(img.width / 20);
-        itemsInGrid[index].height = Math.floor(img.height / 20);
-        img.width = String(itemsInGrid[index].width * 20) + "px";
-        img.height = String(itemsInGrid[index].height * 20) + "px";
-        selectedItem = itemsInGrid[index];
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(img, (item.start.x*20 + gridStart.x),  (item.start.y*20 + gridStart.y), img.width, img.height);
-        }, 0);
-
         }
     fr.readAsDataURL(currentlySelectedImage);
     }, 0);
 }
 
 function updateImageSize(item, width, height) { 
-    let img = document.getElementById(String(item.id))
-    img.width = String(width * 20) + "px";
-    img.height = String(height * 20) + "px";
+    setTimeout(() => {
+        let img = document.getElementById(String(item.id))
+        img.style.width = String(width * 20) + "px";
+        img.style.height = String(height * 20) + "px";
+    
+        let index = itemsInGrid.findIndex(i => i.id === item.id);
+        itemsInGrid[index].cropValues.baseWidth = width;
+        itemsInGrid[index].cropValues.baseHeight = height;
+        itemsInGrid[index].cropValues.cropStart.x = item.start.x;
+        itemsInGrid[index].cropValues.cropStart.y = item.start.y;
+
+        itemsInGrid[index] = itemsInGrid[index];
+    }, 0);
 }
 
-function cropImage(item, cropX, cropY, cropWidth, cropHeight) { 
-    var canvas = document.getElementById(-item.id); //https://stackoverflow.com/questions/65236904/how-can-i-crop-an-area-of-an-image-using-javascript
-    var context = canvas.getContext('2d');
+function cropImage(item) { 
+    let img = document.getElementById(String(item.id))
+    setTimeout(() => {
+        if(item.cropValues.baseWidth != 0 && item.cropValues.baseHeight != 0){
+        img.style.width = String(item.cropValues.baseWidth * 20) + "px";
+        img.style.height = String(item.cropValues.baseHeight * 20) + "px";        
+        img.style.top = String((-item.start.y + item.cropValues.cropStart.y)*20) + "px";
+        img.style.left = String((-item.start.x + item.cropValues.cropStart.x)*20) + "px";
+        img.style.overflow = "hidden";
+        console.log(item.cropValues.cropStart.x, item.cropValues.cropStart.y);
+        }
+    }, 0);
 
-    var imageObj = new Image();
-    imageObj.src = item.src;
-    imageObj.onload = function() {
-
-    //resize our canvas to match the size of the cropped area
-        canvas.width = cropWidth;
-        canvas.height = cropHeight;
-        context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before drawing the cropped image
-    //fill canvas with cropped image
-        context.drawImage(imageObj, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-
-    };
-    imageObj.src = item.src;
-    }   
- 
+}
 
 //https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event
 onMount(() => {
@@ -386,8 +390,9 @@ onMount(() => {
                 <input type="button" on:mousedown={() => selectPlacedItem(item)} style="height: 100%; width: 100%; position: absolute;" on:dblclick={() => changeText(item)}/>  
                 {/if}
                 {#if item.type == "image"}
-                <canvas id = {String(-item.id)} style="position: absolute;"></canvas>
-                <img id = {String(item.id)} style = "position: absolute; opacity: 0" alt = "image added by user"/>
+                <div style="position: relative; height: 100%; width: 100%; overflow: hidden; background-color: transparent;">
+                    <img id = {String(item.id)} style = "object-fit: none; aspect-ratio: auto; position: absolute; overflow:hidden;" alt = "added by user"/>
+                </div>
                 <input type="button" on:click={() => selectPlacedItem(item)} style="height: {item.height*20}px; width: {item.width*20}px; position: absolute;"/>  
                 {/if}
                 
@@ -416,7 +421,6 @@ onMount(() => {
         </section>
     </article>
     <article class = "settings">
-        <canvas width="400" height="300" id="canvas"/>
         <h1>Settings</h1>
         <h2>Themes</h2>
         
