@@ -2,7 +2,6 @@
 import { onMount } from 'svelte';
 import {currentTheme} from '$lib/theme-storage'; //https://www.reddit.com/r/sveltejs/comments/15p6t4w/how_do_i_use_different_themes_with_skeleton_ui/
 import textFit from 'textfit'; 
-	import { base } from '$app/paths';
 let gridSize = {x: 60, y: 80};
 let gridArr = getNewGrid(gridSize.x, gridSize.y);
 let mouseGridPos = {x: 0, y: 0};
@@ -39,6 +38,10 @@ function placeItem(item){
     selectedItem = calPos(item);
     if(selectedItem != null && selectedItem.name != "none"){
         placementOffset = {x: 0, y: 0}; 
+        selectedItem.cropValues.baseWidth = selectedItem.width;
+        selectedItem.cropValues.baseHeight = selectedItem.height;
+        selectedItem.cropValues.cropStart = selectedItem.start;
+        selectedItem.cropValues.cropStart = selectedItem.end;
         itemsInGrid = [...itemsInGrid, selectedItem];
         if (selectedItem.type == "image"){
             addImage(selectedItem);
@@ -84,68 +87,86 @@ function updateMousePos(){
             let newEnd = selectedItem.end;
             let newWidth = selectedItem.width;
             let newHeight = selectedItem.height;
+            let baseStart = selectedItem.start;
+            let baseEnd = selectedItem.end;
+            let baseWidth = selectedItem.width;
+            let baseHeight = selectedItem.height;
+            if (selectType == "cropImage"){
+                newStart = selectedItem.cropValues.cropStart;
+                newEnd = selectedItem.cropValues.cropEnd;
+                newWidth = selectedItem.cropValues.baseWidth;
+                newHeight = selectedItem.cropValues.baseHeight;
+                baseStart = selectedItem.cropValues.cropStart;
+                baseEnd = selectedItem.cropValues.cropEnd;
+                baseWidth = selectedItem.cropValues.baseWidth;
+                baseHeight = selectedItem.cropValues.baseHeight;
+            }
 
             if (dragDirection == "upleft") {//copilot helped with bugfixing this 
-                if (cellId.x < selectedItem.end.x && cellId.y < selectedItem.end.y) {
+                if (cellId.x < baseEnd.x && cellId.y < baseEnd.y) {
                 newStart = cellId;
-                newHeight = selectedItem.height + (selectedItem.start.y - cellId.y);
-                newWidth = selectedItem.width + (selectedItem.start.x - cellId.x);
+                newHeight = baseHeight + (baseStart.y - cellId.y);
+                newWidth = baseWidth + (baseStart.x - cellId.x);
                 }} 
             else if (dragDirection == "up") {
-                if (cellId.y < selectedItem.end.y) {
-                newStart = { x: selectedItem.start.x, y: cellId.y };
-                newHeight = selectedItem.height + (selectedItem.start.y - cellId.y);}} 
+                if (cellId.y < baseEnd.y) {
+                newStart = { x: baseStart.x, y: cellId.y };
+                newHeight = baseHeight + (baseStart.y - cellId.y);}} 
             else if (dragDirection == "upright") {
-                if (cellId.x > selectedItem.start.x && cellId.y < selectedItem.end.y) {
-                newStart = { x: selectedItem.start.x, y: cellId.y };
-                newEnd = { x: cellId.x, y: selectedItem.end.y };
-                newHeight = selectedItem.height + (selectedItem.start.y - cellId.y);
-                newWidth = cellId.x - selectedItem.start.x ;}} 
+                if (cellId.x > baseStart.x && cellId.y < baseEnd.y) {
+                newStart = { x: baseStart.x, y: cellId.y };
+                newEnd = { x: cellId.x, y: baseEnd.y };
+                newHeight = baseHeight + (baseStart.y - cellId.y);
+                newWidth = cellId.x - baseStart.x ;}} 
             else if (dragDirection == "left") {
-                if (cellId.x < selectedItem.end.x) {
-                newStart = { x: cellId.x, y: selectedItem.start.y };
-                newWidth = selectedItem.width + (selectedItem.start.x - cellId.x);}} 
+                if (cellId.x < baseEnd.x) {
+                newStart = { x: cellId.x, y: baseStart.y };
+                newWidth = baseWidth + (baseStart.x - cellId.x);}} 
             else if (dragDirection == "right") {
-                if (cellId.x > selectedItem.start.x) {
-                newEnd = { x: cellId.x, y: selectedItem.end.y };
-                newWidth = cellId.x - selectedItem.start.x ;}} 
+                if (cellId.x > baseStart.x) {
+                newEnd = { x: cellId.x, y: baseEnd.y };
+                newWidth = cellId.x - baseStart.x ;}} 
             else if (dragDirection == "downleft") {
-                if (cellId.x < selectedItem.end.x && cellId.y > selectedItem.start.y) {
-                newStart = { x: cellId.x, y: selectedItem.start.y };
-                newEnd = { x: selectedItem.end.x, y: cellId.y };
-                newWidth = selectedItem.width + (selectedItem.start.x - cellId.x);
-                newHeight = cellId.y - selectedItem.start.y ;}} 
+                if (cellId.x < baseEnd.x && cellId.y > baseStart.y) {
+                newStart = { x: cellId.x, y: baseStart.y };
+                newEnd = { x: baseEnd.x, y: cellId.y };
+                newWidth = baseWidth + (baseStart.x - cellId.x);
+                newHeight = cellId.y - baseStart.y ;}} 
             else if (dragDirection == "down") {
-                if (cellId.y > selectedItem.start.y) {
-                newEnd = { x: selectedItem.end.x, y: cellId.y };
-                newHeight = cellId.y - selectedItem.start.y ;}} 
+                if (cellId.y > baseStart.y) {
+                newEnd = { x: baseEnd.x, y: cellId.y };
+                newHeight = cellId.y - baseStart.y ;}} 
             else if (dragDirection == "downright") {
-                if (cellId.x > selectedItem.start.x && cellId.y > selectedItem.start.y) {
+                if (cellId.x > baseStart.x && cellId.y > baseStart.y) {
                 newEnd = { x: cellId.x, y: cellId.y };
-                newHeight = cellId.y - selectedItem.start.y ;
-                newWidth = cellId.x - selectedItem.start.x ;}
+                newHeight = cellId.y - baseStart.y ;
+                newWidth = cellId.x - baseStart.x ;}
             }
             if (
-                newStart.x !== selectedItem.start.x ||
-                newStart.y !== selectedItem.start.y ||
-                newWidth !== selectedItem.width ||
-                newHeight !== selectedItem.height
+                newStart.x !== baseStart.x ||
+                newStart.y !== baseStart.y ||
+                newWidth !== baseWidth ||
+                newHeight !== baseHeight
             ) {
             let index = itemsInGrid.findIndex(i => i.id === selectedItem.id);
             if (index !== -1) {
                 if(selectedItem.changeFontManually == false && selectedItem.type == "text"){
                     selectedItem.fontSize = adjustFontSize(selectedItem.id, selectedItem.name);
                 } // Update the font size when the contaiener size changes
+                if(selectedItem.type == "image" && selectType == "cropImage"){
+                    cropImage(selectedItem , newWidth, newHeight, newStart, newEnd);
+                }
+                else{
                 itemsInGrid[index] = {name : selectedItem.name , height: newHeight, width: newWidth, start: newStart, end: newEnd, type: selectedItem.type, 
                     id: selectedItem.id, fontSize: selectedItem.fontSize, changeFontManually: selectedItem.changeFontManually, font: selectedItem.font, 
                     color: selectedItem.color, backgroundColor: selectedItem.backgroundColor, src: selectedItem.src, cropValues: selectedItem.cropValues};
+                }
                 selectedItem = itemsInGrid[index]
+
                 if (selectedItem.type == "image" && selectType != "cropImage"){
                     updateImageSize(selectedItem, selectedItem.width, selectedItem.height);
                 }
-                if(selectedItem.type == "image" && selectType == "cropImage"){
-                    cropImage(selectedItem);
-                }
+
                 selectedItem = itemsInGrid[index]
             }}}}}
 
@@ -229,25 +250,16 @@ function addImage(selected){
     fr.onload = function () {
         let img = document.getElementById(String(selected.id))
         let index = itemsInGrid.findIndex(i => i.id === selected.id);
-        setTimeout(() => {
-        itemsInGrid[index].width = Math.floor(img.width / 20);
-        itemsInGrid[index].height = Math.floor(img.height / 20);
-        img.width = itemsInGrid[index].width * 20;
-        img.height = itemsInGrid[index].height * 20;
-        itemsInGrid[index].cropValues.baseWidth = selected.width;
-        itemsInGrid[index].cropValues.baseHeight = selected.height;
-        itemsInGrid[index].cropValues.cropStart.x = selected.start.x;
-        itemsInGrid[index].cropValues.cropStart.y = selected.start.y;
-        selectedItem = itemsInGrid[index];
-        }, 0);
+
         if (selected.src != ""){
-            img.src = selected.src;
+            img.style.backgroundImage = selected.src;
         }
         else{
-            img.src = fr.result;
+            img.style.backgroundImage = fr.result;
             itemsInGrid[index].src = fr.result;
         }
         }
+        updateImageSize(selected, selected.width, selected.height);
     fr.readAsDataURL(currentlySelectedImage);
     }, 0);
 }
@@ -261,26 +273,30 @@ function updateImageSize(item, width, height) {
         let index = itemsInGrid.findIndex(i => i.id === item.id);
         itemsInGrid[index].cropValues.baseWidth = width;
         itemsInGrid[index].cropValues.baseHeight = height;
-        itemsInGrid[index].cropValues.cropStart.x = item.start.x;
-        itemsInGrid[index].cropValues.cropStart.y = item.start.y;
+        itemsInGrid[index].cropValues.cropStart = item.start;
+        itemsInGrid[index].cropValues.cropEnd = item.end;
 
         itemsInGrid[index] = itemsInGrid[index];
     }, 0);
 }
 
-function cropImage(item) { 
-    let img = document.getElementById(String(item.id))
+function cropImage(item, width, height, start, end){
     setTimeout(() => {
-        if(item.cropValues.baseWidth != 0 && item.cropValues.baseHeight != 0){
-        img.style.width = String(item.cropValues.baseWidth * 20) + "px";
-        img.style.height = String(item.cropValues.baseHeight * 20) + "px";        
-        img.style.top = String((-item.start.y + item.cropValues.cropStart.y)*20) + "px";
-        img.style.left = String((-item.start.x + item.cropValues.cropStart.x)*20) + "px";
-        img.style.overflow = "hidden";
-        console.log(item.cropValues.cropStart.x, item.cropValues.cropStart.y);
-        }
+        let index = itemsInGrid.findIndex(i => i.id === item.id);
+        let div = document.getElementById(String(-item.id))
+        let img = document.getElementById(String(item.id))
+        div.style.width = String(width * 20) + "px";
+        div.style.height = String(height * 20) + "px";        
+        div.style.top = String((-item.start.y + start.y)*20) + "px";
+        div.style.left = String((-item.start.x + start.x)*20) + "px";
+        img.style.top = String((item.start.y - start.y)*20) + "px";
+        img.style.left = String((item.start.x - start.x)*20) + "px";
+        itemsInGrid[index].cropValues.baseWidth = width;
+        itemsInGrid[index].cropValues.baseHeight = height;
+        itemsInGrid[index].cropValues.cropStart = start;
+        itemsInGrid[index].cropValues.cropEnd = end;
+        itemsInGrid[index] = itemsInGrid[index];
     }, 0);
-
 }
 
 //https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event
@@ -357,12 +373,6 @@ onMount(() => {
             <form action=""> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file-->
                 <input type="file" accept="image/*" on:change={e => {currentlySelectedImage = e.target.files[0];}}/>
                 <input type="button" value="Drag from here" on:mousedown={() => getSelectedItem("image")}/> 
-                <input type="checkbox" id="imageCrop" on:change={e => {if(e.target.checked == true){
-                    selectType = "cropImage";
-                }
-                else{
-                    selectType = "itemSelect";
-                }}}/>
             </form>
         </section>
     </article>
@@ -390,10 +400,19 @@ onMount(() => {
                 <input type="button" on:mousedown={() => selectPlacedItem(item)} style="height: 100%; width: 100%; position: absolute;" on:dblclick={() => changeText(item)}/>  
                 {/if}
                 {#if item.type == "image"}
-                <div style="position: relative; height: 100%; width: 100%; overflow: hidden; background-color: transparent;">
-                    <img id = {String(item.id)} style = "object-fit: none; aspect-ratio: auto; position: absolute; overflow:hidden;" alt = "added by user"/>
+                <div id = {String(-item.id)} style="position: relative; overflow: hidden; width:100%; height:100%;" class:border2 = {selectType == "cropImage"}>
+                <input type="button" id = {String(item.id)} on:click={() => selectPlacedItem(item)} style="height: {item.height*20}px; width: {item.width*20}px; position: absolute; background-image: url({item.src}); background-size: cover; background-repeat: no-repeat; background-size: 100% 100%;"/>  
+                <div class:invisible = {item != selectedItem || selectType != "cropImage"} style="height: 100%; width: 100%;">
+                    <input type="button" on:mousedown={() => startCropImage(item, "upleft")} style= "top: {- 5}px; left: {- 5}px; background-color: white;" class = "sizeButton" id = "upleft"/>
+                    <input type="button" on:mousedown={() => startCropImage(item, "up")} style= "top: {- 5}px; left: {(item.cropValues.baseWidth*20)/2}px; background-color: white;" class = "sizeButton" id = "up"/>
+                    <input type="button" on:mousedown={() => startCropImage(item, "upright")} style= "top: {- 5}px; left: {- 20 + item.cropValues.baseWidth*20}px; background-color: white;" class = "sizeButton" id = "upright"/>
+                    <input type="button" on:mousedown={() => startCropImage(item, "left")} style= "top: {item.cropValues.baseHeight*10-20}px; left: {- 5}px; background-color: white;" class = "sizeButton" id = "left"/>  
+                    <input type="button" on:mousedown={() => startCropImage(item, "right")} style= "top: { item.cropValues.baseHeight*10-8}px; left: { -20 + item.cropValues.baseWidth*20}px; background-color: white;" class = "sizeButton" id = "right"/>
+                    <input type="button" on:mousedown={() => startCropImage(item, "downleft")} style= "top: {+ item.cropValues.baseHeight*20 -23}px; left: {-2}px; background-color: white;" class = "sizeButton" id = "downleft"/>
+                    <input type="button" on:mousedown={() => startCropImage(item, "down")} style= "top: {+ item.cropValues.baseHeight*20 - 20}px; left: {+ item.cropValues.baseWidth*10}px; background-color: white;" class = "sizeButton" id = "down"/>
+                    <input type="button" on:mousedown={() => startCropImage(item, "downright")} style= "top: {+ item.cropValues.baseHeight*20 -20}px; left: {-20 + item.cropValues.baseWidth*20}px; background-color: white;" class = "sizeButton"id ="downright"/>
                 </div>
-                <input type="button" on:click={() => selectPlacedItem(item)} style="height: {item.height*20}px; width: {item.width*20}px; position: absolute;"/>  
+                </div>
                 {/if}
                 
                 <div class:invisible = {item != selectedItem || selectType == "cropImage"} style="height: 100%; width: 100%;">
@@ -406,16 +425,7 @@ onMount(() => {
                     <input type="button" on:mousedown={() => changeSize(item, "down")} style= "top: {+ item.height*20 - 8}px; left: {+ item.width*10}px;" class = "sizeButton" id = "down"/>
                     <input type="button" on:mousedown={() => changeSize(item, "downright")} style= "top: {+ item.height*20 -8}px; left: {-8 + item.width*20}px;" class = "sizeButton"id ="downright"/>
                 </div>
-                <div class:invisible = {item != selectedItem || selectType != "cropImage"} style="height: 100%; width: 100%;">
-                    <input type="button" on:mousedown={() => startCropImage(item, "upleft")} style= "top: {- 5}px; left: {- 5}px; background-color: black;" class = "sizeButton" id = "upleft"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "up")} style= "top: {- 5}px; left: {(item.width*20/2)}px; background-color: black;" class = "sizeButton" id = "up"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "upright")} style= "top: {- 5}px; left: {- 8 + item.width*20}px; background-color: black;" class = "sizeButton" id = "upright"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "left")} style= "top: {item.height*10-8}px; left: {- 5}px; background-color: black;" class = "sizeButton" id = "left"/>  
-                    <input type="button" on:mousedown={() => startCropImage(item, "right")} style= "top: { item.height*10-8}px; left: { -8 + item.width*20}px; background-color: black;" class = "sizeButton" id = "right"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "downleft")} style= "top: {+ item.height*20 -8}px; left: {- 5}px; background-color: black;" class = "sizeButton" id = "downleft"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "down")} style= "top: {+ item.height*20 - 8}px; left: {+ item.width*10}px; background-color: black;" class = "sizeButton" id = "down"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "downright")} style= "top: {+ item.height*20 -8}px; left: {-8 + item.width*20}px; background-color: black;" class = "sizeButton"id ="downright"/>
-                </div>
+
             </div>
             {/each}
         </section>
@@ -604,7 +614,12 @@ onMount(() => {
         <div class:invisible = {selectedItem.type != "image" || selectType == "itemPlace"}>
             <h2>Image Settings</h2>
             <label for="imageCrop">Crop Image</label>
-
+            <input type="checkbox" id="imageCrop" on:change={e => {if(e.target.checked == true){
+                selectType = "cropImage";
+            }
+            else{
+                selectType = "itemSelect";
+            }}}/>
             
         </div>
     </article>
@@ -655,8 +670,8 @@ onMount(() => {
         position: absolute;
         background-color: rgb(0, 17, 255);
         border: 1px solid black;
-        width: 10px;
-        height: 10px;
+        width: 15px;
+        height: 15px;
     }
     .cell{
         border: 1px dashed black;
@@ -704,7 +719,13 @@ onMount(() => {
     .border{
         position: absolute;
         background-color: transparent;
-        border: 5px solid black;
+        border: 5px solid rgb(0, 110, 255);
+        width: 100%;
+        height: 100%;
+    }
+    .border2{
+        background-color: transparent;
+        border: 5px solid rgb(255, 255, 255);
         width: 100%;
         height: 100%;
     }
