@@ -1,1 +1,0 @@
-import{w as o}from"./BFd-wzZO.js";var l=typeof globalThis<"u"?globalThis:typeof window<"u"?window:typeof global<"u"?global:typeof self<"u"?self:{};function n(e){return e&&e.__esModule&&Object.prototype.hasOwnProperty.call(e,"default")?e.default:e}const a=o("crimson");export{a,l as c,n as g};

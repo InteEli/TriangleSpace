@@ -1,4 +1,4 @@
-import{s as k,n as g}from"./DKRI5s9X.js";import{S as z,i as D,d as n,a as l,c as r,g as p,f as d,e as v,s as f}from"./CT1CIu91.js";function P(M){let a,H="Hello 👋",u,i,w=`Welcome to my first devblog post!
+import{s as k,n as g}from"./BQRqvfMV.js";import{S as z,i as D,d as n,a as l,c as r,g as p,f as d,e as v,s as f}from"./IAwJNiqK.js";function P(M){let a,H="Hello 👋",u,i,w=`Welcome to my first devblog post!
 So far I have added the drag and drop functions, adding text and moving them. I have also started with the resizing but that is proving alot harder then anything else.
 The code I used is very Java Script heavy. Thats why
 I have had some help from my trusted companion copilot but mostly when bugfixing because I try to minimize AI use. I have also gotten from help from the internet and websites like stackoverflow.`,x,s,I="Changes",C,o,T="The following changes and implementations have been made in that version of the project:<br/> <em>Drag and drop functions</em> <br/> <em>Basic Styling</em>",c,h,S="Features",_,m,L=`✅ Drag and drop<br/>

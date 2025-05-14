@@ -24,16 +24,29 @@
 <nav>
 <a href="{base}/">Home</a>
 <a href="{base}/current-project">Current Project</a>
-<a href="{base}/dev-blog">Dev Log</a>
 </nav>
 
 <style>
 	nav {
-		display: flex;
+		display: grid;
+		grid-template-columns: 50px 120px 120px 10fr;
+		grid-template-rows: 1fr;
+		gap: 0.2rem;
+		flex-direction: row;
 		justify-content: center;
-		margin: 1rem 0;
-		background-color: aqua;
+		width: 100%;
+		height: 2rem;
+		padding: 0.2rem;
+		background-color: rgb(255, 255, 255);
 		color: black;
+	}
+	a {
+		width: 100%;
+		height: 100%;
+		color: black;
+		text-align: center;
+		padding: 1px;
+		
 	}
 	:global(body){
 		margin: 0;
