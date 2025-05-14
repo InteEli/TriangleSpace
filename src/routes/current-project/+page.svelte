@@ -328,6 +328,12 @@ function changeBackground(type, input){
         }, 0);
     }
     }
+function copyToClipBoard(id){ // https://www.w3schools.com/howto/howto_js_copy_clipboard.asp
+    var copyText = document.getElementById(id);
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); // For mobile devices
+    navigator.clipboard.writeText(copyText.value);
+}
 
 //https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event
 onMount(() => {
@@ -673,7 +679,40 @@ onMount(() => {
                     selectType = "itemSelect";
                 }}}/>
             </div>
-        <input type="image" src="https://cdn-icons-png.flaticon.com/512/542/542724.png" class = "button" class:selectedButton = {selectType == "cropImage"} alt="Crop image" style="width: 20px; height 60px;" on:click={() => deleteItem(selectedItem)}/>
+        <input type="image" src="https://cdn-icons-png.flaticon.com/512/542/542724.png" class = "button" alt="Delete Selected Item" style="width: 20px; height 60px;" on:click={() => deleteItem(selectedItem)}/>
+        <input type="image" src="https://www.svgrepo.com/show/62103/export.svg" class = "button" class:selectedButton = {selectType == "exportProject"} alt="Export Project" style="width: 20px; height 60px;" on:click={() => {if(selectType != "exportProject"){
+            selectType = "exportProject";
+        }
+        else{
+            selectType = "itemSelect";
+        }}}/>
+        <aside class = "exportProject" class:invisible = {selectType != "exportProject"}>
+            <textarea id = "codeExport" readonly style="width: 100%; height: 200px;">
+                {`let itemsInGrid = [${itemsInGrid.map(item => ` 
+        {
+            name: "${item.name}",
+            height: ${item.height},
+            width: ${item.width},
+            start: { x: ${item.start.x}, y: ${item.start.y} },
+            end: { x: ${item.end.x}, y: ${item.end.y} },
+            type: "${item.type}",
+            id: ${item.id},
+            fontSize: "${item.fontSize}",
+            changeFontManually: ${item.changeFontManually},
+            font: "${item.font}",
+            color: "${item.color}",
+            backgroundColor: "${item.backgroundColor}",
+            src: "${item.src}",
+            cropValues: {
+                cropStart: { x: ${item.cropValues.cropStart.x}, y: ${item.cropValues.cropStart.y} },
+                cropEnd: { x: ${item.cropValues.cropEnd.x}, y: ${item.cropValues.cropEnd.y} },
+                baseWidth: ${item.cropValues.baseWidth},
+                baseHeight: ${item.cropValues.baseHeight}
+            }
+                }`).join(",\n")}];`}
+            </textarea><!--copilot helped with this because there was other no easy way to show the list with object as written in code-->
+        <input type="button" value="Copy to ClipBoard" on:click={() => {copyToClipBoard("codeExport")}}/>
+        </aside>
 
         </div>
         </section>
@@ -752,6 +791,20 @@ onMount(() => {
         border-radius: 20px;
         height: 350px;
         width: 200px;
+        color: black;
+        font-family: 'Times New Roman', Times, serif;
+        z-index: 100;
+        margin: 20px;
+    }
+    .exportProject{
+        display: flex;
+        position: absolute;
+        flex-direction: column;
+        padding: 10px;
+        background-color: rgb(243, 243, 243);
+        border-radius: 20px;
+        height: 50vh;
+        width: 60vw;
         color: black;
         font-family: 'Times New Roman', Times, serif;
         z-index: 100;

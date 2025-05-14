@@ -1,0 +1,21 @@
+---
+title: version 0.0.8
+date: "2025-05-07"
+---
+
+# Hello There 👋👋🤚
+From last time I have now added cropping that works fairly well🎉🎉👍👍 it has some problems such as not resizing when when resizing the 
+image but I don't have time to fix that😥😥😥. I tried many things to get it to work but the solution i found was using a div with position relative 
+that changes position and overflow hidden when cropping while the image inside stays the same size. I have also done some basic styling 🎂🎂😎🎉 but hoping to improve it more 
+before the next devblog. I am also working on adding on exporting the project. I am using exporting the list with objects added and then
+adding them to another project that you can download from github in the near future🎂❤.
+
+## Changes 
+The following changes and implementations have been made in that version of the project:<br>
+*Added cropping* <br>
+*Improved Styling* <br>
+*Bug fixes* <br>
+*Started export*<br>
+## Features
+✅ Cropping
+<br>
