@@ -3,6 +3,7 @@ import { onMount } from 'svelte';
 import {currentTheme} from '$lib/theme-storage'; //https://www.reddit.com/r/sveltejs/comments/15p6t4w/how_do_i_use_different_themes_with_skeleton_ui/
 import textFit from 'textfit'; 
 let gridSize = {x: 60, y: 80};
+let cellSize = 20;
 let gridArr = getNewGrid(gridSize.x, gridSize.y);
 let mouseGridPos = {x: 0, y: 0};
 let mousePos = {x: 0, y: 0};
@@ -22,6 +23,7 @@ let items = [{name: "header 1", height: 5, width: 20, type: "text", id: 0, fontS
     {name: "image", height: 30, width: 30, type: "image", id: 0, fontSize: "0px", changeFontManually: false, font: "Arial", color: "themeDefault", backgroundColor: "transparent", src:"", cropValues: {cropStart: {x: 0, y: 0}, cropEnd: {x: 0, y: 0 }, baseWidth: 0, baseHeight: 0}}];
 let itemsInGrid = [];
 let scrollY = 0;
+let animationFrame;
 let mousedown = false;
 let dragDirection = "none"; 
 let gridElement;
@@ -30,9 +32,10 @@ let mainBackground = "transparent";
 
 function getSelectedItem(item){
     let selected = items.find(i => i.name == item);
+    let fontSize = String(parseFloat(selected.fontSize)/20*cellSize)+"px";
     selectedItem = {name: selected.name, height: selected.height, width: selected.width, 
         start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: selected.type, id: selected.id, 
-        fontSize: selected.fontSize, changeFontManually: selected.changeFontManually, 
+        fontSize: fontSize, changeFontManually: selected.changeFontManually, 
         font: selected.font, color: selected.color, backgroundColor: selected.backgroundColor, src: selected.src, cropValues: selected.cropValues};
     selectType = "itemPlace";
 }
@@ -55,9 +58,10 @@ function placeItem(item){
     }
 }
 function calPos(Item){
-    let start = {x: mouseGridPos.x - Math.floor(placementOffset.x /20), y: mouseGridPos.y - Math.floor((placementOffset.y) /20)};
+    let start = {x: mouseGridPos.x - Math.floor(placementOffset.x /cellSize), y: mouseGridPos.y - Math.floor((placementOffset.y) /cellSize)};
     let end = {x: start.x + Item.width, y: start.y + Item.height};
-    if (end.x < gridSize.x+3 && end.y < gridSize.y && start.x > 0 && start.y > 0){ 
+    cancelAnimationFrame(animationFrame);
+    if (end.x < gridSize.x && end.y < gridSize.y && start.x > 0 && start.y > 0){ 
         let newId = Item.id;
         if(Item.id === 0){
             lastUsedId = lastUsedId + 1;
@@ -80,8 +84,8 @@ function getNewGrid(x,y){
     return gridArr;}
 function updateMousePos(){
     let cellId = {x: 0, y: 0}; 
-    cellId.x = Math.floor((mousePos.x - gridStart.x) / 20);
-    cellId.y = Math.floor((mousePos.y + scrollY - gridStart.y) / 20);
+    cellId.x = Math.floor((mousePos.x - gridStart.x) / cellSize);
+    cellId.y = Math.floor((mousePos.y + scrollY - gridStart.y) / cellSize);
     mouseGridPos = cellId;
     if (selectedItem.name != "none" && mousedown == true){//resizing the item
         if (selectType == "itemSize" || selectType == "cropImage"){
@@ -183,8 +187,9 @@ function selectPlacedItem(item){
 }
 function rePlaceItem(item) {
     if (selectType === "itemSelect") {
+        cancelAnimationFrame(animationFrame);
         selectType = "itemPlace";
-        placementOffset = { x: mousePos.x - item.start.x * 20 - gridStart.x, y: mousePos.y + scrollY - item.start.y * 20 - gridStart.y}; // offset for placement
+        placementOffset = { x: mousePos.x - item.start.x * cellSize - gridStart.x, y: mousePos.y + scrollY - item.start.y * cellSize - gridStart.y}; // offset for placement
         const index = itemsInGrid.findIndex(i => i.id === item.id);;
         if (index !== -1) {
             itemsInGrid.splice(index, 1); // remove the item from the array
@@ -269,8 +274,8 @@ function addImage(selected){
 function updateImageSize(item, width, height) { 
     setTimeout(() => {
         let img = document.getElementById(String(item.id))
-        img.style.width = String(width * 20) + "px";
-        img.style.height = String(height * 20) + "px";
+        img.style.width = String(width * cellSize) + "px";
+        img.style.height = String(height * cellSize) + "px";
     
         let index = itemsInGrid.findIndex(i => i.id === item.id);
         itemsInGrid[index].cropValues.baseWidth = width;
@@ -287,12 +292,12 @@ function cropImage(item, width, height, start, end){
         let index = itemsInGrid.findIndex(i => i.id === item.id);
         let div = document.getElementById(String(-item.id))
         let img = document.getElementById(String(item.id))
-        div.style.width = String(width * 20) + "px";
-        div.style.height = String(height * 20) + "px";        
-        div.style.top = String((-item.start.y + start.y)*20) + "px";
-        div.style.left = String((-item.start.x + start.x)*20) + "px";
-        img.style.top = String((item.start.y - start.y)*20) + "px";
-        img.style.left = String((item.start.x - start.x)*20) + "px";
+        div.style.width = String(width * cellSize) + "px";
+        div.style.height = String(height * cellSize) + "px";        
+        div.style.top = String((-item.start.y + start.y)*cellSize) + "px";
+        div.style.left = String((-item.start.x + start.x)*cellSize) + "px";
+        img.style.top = String((item.start.y - start.y)*cellSize) + "px";
+        img.style.left = String((item.start.x - start.x)*cellSize) + "px";
         itemsInGrid[index].cropValues.baseWidth = width;
         itemsInGrid[index].cropValues.baseHeight = height;
         itemsInGrid[index].cropValues.cropStart = start;
@@ -335,13 +340,30 @@ function copyToClipBoard(id){ // https://www.w3schools.com/howto/howto_js_copy_c
     navigator.clipboard.writeText(copyText.value);
 }
 
+function updateCellSize(){
+    let windowWidth = window.innerWidth;
+    let currentCellsize = cellSize;
+    if (windowWidth < 800){
+        cellSize = 8;
+    }
+    else if (windowWidth < 1400){
+        cellSize = 10;
+    }
+    else{
+        cellSize = 20;
+    }
+    if(currentCellsize != cellSize){
+        itemsInGrid = itemsInGrid
+    }
+}
+
 //https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event
 onMount(() => {
 
-    let animationFrame; //copilot suggested this to stop freezeing
+     //copilot suggested this to stop freezeing
 
     function update() {
-    if (mousedown && (selectType == "itemSize" || selectType == "cropImage")) {
+    if (mousedown && (selectType == "itemSize" || selectType == "cropImage" || selectType == "itemPlace")) {
         updateMousePos(); 
         animationFrame = requestAnimationFrame(update); 
     } else {
@@ -349,11 +371,11 @@ onMount(() => {
     }
 }
 
-        window.addEventListener("mousemove", (event) => {
+        window.addEventListener("pointermove", (event) => {
             mousePos = { x: event.clientX, y: event.clientY };
         });
 
-        window.addEventListener("mousedown", (event) => {
+        window.addEventListener("pointerdown", (event) => {
             mousedown = true;
             if(selectType == "itemText"){
                 var textElement = document.getElementById(String(selectedItem.id));
@@ -369,7 +391,7 @@ onMount(() => {
             animationFrame = requestAnimationFrame(update);
             }
         });
-        window.addEventListener("mouseup", (event) => {
+        window.addEventListener("pointerup", (event) => {
             mousedown = false;
             cancelAnimationFrame(animationFrame);
             if (selectType == "itemPlace") {
@@ -381,12 +403,19 @@ onMount(() => {
                 selectType = "itemSelect";
             }
         });
+        window.addEventListener("resize", (event) => {
+            const rect = gridElement.getBoundingClientRect();
+            gridStart = { x: rect.left, y: rect.top }; // Store the grid's top-left corner coordinates
+            updateMousePos();
+            updateCellSize();
+            
+        });
         
         if (gridElement) {//copilot suggested this
             const rect = gridElement.getBoundingClientRect();
             gridStart = { x: rect.left, y: rect.top }; // Store the grid's top-left corner coordinates
-            console.log("Grid Start Coordinates:", gridStart);
         }
+        updateCellSize();
     });
 
 </script>
@@ -397,18 +426,18 @@ onMount(() => {
         <h1>Tools</h1>
         <section>
             <h2>Text</h2>
-            <input type="button" value="Header 1" on:mousedown={() => getSelectedItem("header 1")}/>    
-            <input type="button" value="Header 2" on:mousedown={() => getSelectedItem("header 2")}/>   
-            <input type="button" value="Header 3" on:mousedown={() => getSelectedItem("header 3")}/>   
-            <input type="button" value="Text 1" on:mousedown={() => getSelectedItem("text 1")}/>    
-            <input type="button" value="Text 2" on:mousedown={() => getSelectedItem("text 2")}/>   
-            <input type="button" value="Text 3" on:mousedown={() => getSelectedItem("text 3")}/>   
+            <input type="button" value="Header 1" on:pointerdown={() => getSelectedItem("header 1")}/>    
+            <input type="button" value="Header 2" on:pointerdown={() => getSelectedItem("header 2")}/>   
+            <input type="button" value="Header 3" on:pointerdown={() => getSelectedItem("header 3")}/>   
+            <input type="button" value="Text 1" on:pointerdown={() => getSelectedItem("text 1")}/>    
+            <input type="button" value="Text 2" on:pointerdown={() => getSelectedItem("text 2")}/>   
+            <input type="button" value="Text 3" on:pointerdown={() => getSelectedItem("text 3")}/>   
         </section>
         <section>
             <h2>Image</h2>
             <form action=""> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file-->
                 <input type="file" accept="image/*" on:change={e => {currentlySelectedImage = e.target.files[0];}}/>
-                <input type="button" value="Drag from here" on:mousedown={() => getSelectedItem("image")}/> 
+                <input type="button" value="Drag from here" on:pointerdown={() => getSelectedItem("image")}/> 
             </form>
         </section>
     </article>
@@ -697,7 +726,7 @@ onMount(() => {
             end: { x: ${item.end.x}, y: ${item.end.y} },
             type: "${item.type}",
             id: ${item.id},
-            fontSize: "${item.fontSize}",
+            fontSize: "${String(parseFloat(item.fontSize)/cellSize*20)+"px"}",
             changeFontManually: ${item.changeFontManually},
             font: "${item.font}",
             color: "${item.color}",
@@ -716,17 +745,19 @@ onMount(() => {
 
         </div>
         </section>
-        <section class = "websiteGrid" bind:this={gridElement}>
+        <div style="display: flex; justify-content: center; align-items: flex-start; width: 100%; height: 100%;">
+        <section class = "websiteGrid" bind:this={gridElement} style="height: {gridSize.y*cellSize}px; width: {gridSize.x*cellSize}px;">
             {#each gridArr as cell}
             <div class = "cell" role = "region" tabindex="-1">
-                <input type="button" on:mousedown={() =>{deSelect();}} style="height: 100%; width: 100%;"/>
+                <input type="button" on:click={() =>{deSelect();}} style="height: 100%; width: 100%;"/>
             </div>
             {/each}
         </section>
+        </div>
         <section style="height: 100%; width: 100%;">
             {#each itemsInGrid as item}
-            <div class = "item" class:selected = {item == selectedItem} style="width:{item.width *20}px; height:{item.height*20}px; top: {(item.start.y*20) + gridStart.y}px; left: {(item.start.x *20) + gridStart.x}px; background-color: {item.backgroundColor};">
-                <input type="button" on:mousedown={() => rePlaceItem(item)} style= "top: {-5}px; left: {- 5}px; width:{item.width *20+5}px; height:{item.height*20+5}px;" class = "border" class:invisible = {item != selectedItem}/>
+            <div class = "item" class:selected = {item == selectedItem} style="width:{item.width *cellSize}px; height:{item.height*cellSize}px; top: {(item.start.y*cellSize) + gridStart.y}px; left: {(item.start.x *cellSize) + gridStart.x}px; background-color: {item.backgroundColor};">
+                <input type="button" on:pointerdown={() => rePlaceItem(item)} style= "top: {-5}px; left: {- 5}px; width:{item.width *cellSize+5}px; height:{item.height*cellSize+5}px;" class = "border" class:invisible = {item != selectedItem}/>
                 {#if item.type == "text"}
                 <textarea value={item.name} style="font-size: {item.fontSize}; font-family: {item.font};  color:{item.color};" on:input={(e) => {
                     item.name = e.target.value;
@@ -736,33 +767,33 @@ onMount(() => {
                     }} 
                     class = "textInput" id = {String(item.id)} class:higherZ = {document.activeElement == document.getElementById(String(item.id))}/>
                 <div style="height: 100%; width: 100%; color: transparent; background-color: transparent; font-family: {item.font}" class = "textInput" id = {String(-item.id)}> {item.name} </div>  <!--a div that changes font size with help of text fit and then applies that font size to the text area because of lack of support of text area-->  
-                <input type="button" on:mousedown={() => selectPlacedItem(item)} style="height: 100%; width: 100%; position: absolute;" on:dblclick={() => changeText(item)}/>  
+                <input type="button" on:pointerdown={() => selectPlacedItem(item)} style="height: 100%; width: 100%; position: absolute;" on:dblclick={() => changeText(item)}/>  
                 {/if}
                 {#if item.type == "image"}
                 <div id = {String(-item.id)} style="position: relative; overflow: hidden; width:100%; height:100%;" class:border2 = {selectType == "cropImage" && item == selectedItem}>
-                <input type="button" id = {String(item.id)} on:click={() => selectPlacedItem(item)} style="height: {item.height*20}px; width: {item.width*20}px; position: absolute; background-image: url({item.src}); background-size: cover; background-repeat: no-repeat; background-size: 100% 100%;"/>  <!--https://stackoverflow.com/questions/71767782/make-image-fit-in-a-container-without-object-fit-contain-->
+                <input type="button" id = {String(item.id)} on:click={() => selectPlacedItem(item)} style="height: {item.height*cellSize}px; width: {item.width*cellSize}px; position: absolute; background-image: url({item.src}); background-size: cover; background-repeat: no-repeat; background-size: 100% 100%;"/>  <!--https://stackoverflow.com/questions/71767782/make-image-fit-in-a-container-without-object-fit-contain-->
                 <div class:invisible = {item != selectedItem || selectType != "cropImage"} style="height: 100%; width: 100%;">
-                    <input type="button" on:mousedown={() => startCropImage(item, "upleft")} style= "top: {- 5}px; left: {- 5}px; background-color: white;" class = "sizeButton" id = "upleft"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "up")} style= "top: {- 5}px; left: {(item.cropValues.baseWidth*20)/2}px; background-color: white;" class = "sizeButton" id = "up"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "upright")} style= "top: {- 5}px; left: {- 20 + item.cropValues.baseWidth*20}px; background-color: white;" class = "sizeButton" id = "upright"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "left")} style= "top: {item.cropValues.baseHeight*10-20}px; left: {- 5}px; background-color: white;" class = "sizeButton" id = "left"/>  
-                    <input type="button" on:mousedown={() => startCropImage(item, "right")} style= "top: { item.cropValues.baseHeight*10-8}px; left: { -20 + item.cropValues.baseWidth*20}px; background-color: white;" class = "sizeButton" id = "right"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "downleft")} style= "top: {+ item.cropValues.baseHeight*20 -23}px; left: {-2}px; background-color: white;" class = "sizeButton" id = "downleft"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "down")} style= "top: {+ item.cropValues.baseHeight*20 - 20}px; left: {+ item.cropValues.baseWidth*10}px; background-color: white;" class = "sizeButton" id = "down"/>
-                    <input type="button" on:mousedown={() => startCropImage(item, "downright")} style= "top: {+ item.cropValues.baseHeight*20 -20}px; left: {-20 + item.cropValues.baseWidth*20}px; background-color: white;" class = "sizeButton"id ="downright"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "upleft")} style= "top: {- 5}px; left: {- 5}px; background-color: white;" class = "sizeButton" id = "upleft"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "up")} style= "top: {- 5}px; left: {(item.cropValues.baseWidth*cellSize)/2}px; background-color: white;" class = "sizeButton" id = "up"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "upright")} style= "top: {- 5}px; left: {- cellSize + item.cropValues.baseWidth*cellSize-10}px; background-color: white;" class = "sizeButton" id = "upright"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "left")} style= "top: {item.cropValues.baseHeight*cellSize/2-cellSize}px; left: {- 5}px; background-color: white;" class = "sizeButton" id = "left"/>  
+                    <input type="button" on:pointerdown={() => startCropImage(item, "right")} style= "top: { item.cropValues.baseHeight*cellSize/2-8}px; left: { - cellSize + item.cropValues.baseWidth*cellSize-10}px; background-color: white;" class = "sizeButton" id = "right"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "downleft")} style= "top: {+ item.cropValues.baseHeight*cellSize - cellSize-8}px; left: {-2}px; background-color: white;" class = "sizeButton" id = "downleft"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "down")} style= "top: {+ item.cropValues.baseHeight*cellSize - cellSize-8}px; left: {+ item.cropValues.baseWidth*cellSize/2}px; background-color: white;" class = "sizeButton" id = "down"/>
+                    <input type="button" on:pointerdown={() => startCropImage(item, "downright")} style= "top: {+ item.cropValues.baseHeight*cellSize - cellSize-8}px; left: {-cellSize + item.cropValues.baseWidth*cellSize-10}px; background-color: white;" class = "sizeButton"id ="downright"/>
                 </div>
                 </div>
                 {/if}
                 
                 <div class:invisible = {item != selectedItem || selectType == "cropImage"} style="height: 100%; width: 100%;">
-                    <input type="button" on:mousedown={() => changeSize(item, "upleft")} style= "top: {- 5}px; left: {- 5}px;" class = "sizeButton" id = "upleft"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "up")} style= "top: {- 5}px; left: {(item.width*20/2)}px;" class = "sizeButton" id = "up"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "upright")} style= "top: {- 5}px; left: {- 8 + item.width*20}px;" class = "sizeButton" id = "upright"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "left")} style= "top: {item.height*10-8}px; left: {- 5}px;" class = "sizeButton" id = "left"/>  
-                    <input type="button" on:mousedown={() => changeSize(item, "right")} style= "top: { item.height*10-8}px; left: { -8 + item.width*20}px;" class = "sizeButton" id = "right"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "downleft")} style= "top: {+ item.height*20 -8}px; left: {- 5}px;" class = "sizeButton" id = "downleft"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "down")} style= "top: {+ item.height*20 - 8}px; left: {+ item.width*10}px;" class = "sizeButton" id = "down"/>
-                    <input type="button" on:mousedown={() => changeSize(item, "downright")} style= "top: {+ item.height*20 -8}px; left: {-8 + item.width*20}px;" class = "sizeButton"id ="downright"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "upleft")} style= "top: {- 5}px; left: {- 5}px;" class = "sizeButton" id = "upleft"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "up")} style= "top: {- 5}px; left: {(item.width*cellSize/2)}px;" class = "sizeButton" id = "up"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "upright")} style= "top: {- 5}px; left: {- 8 + item.width*cellSize}px;" class = "sizeButton" id = "upright"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "left")} style= "top: {item.height*cellSize/2-8}px; left: {- 5}px;" class = "sizeButton" id = "left"/>  
+                    <input type="button" on:pointerdown={() => changeSize(item, "right")} style= "top: { item.height*cellSize/2-8}px; left: { -8 + item.width*cellSize}px;" class = "sizeButton" id = "right"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "downleft")} style= "top: {+ item.height*cellSize - cellSize/2}px; left: {- 5}px;" class = "sizeButton" id = "downleft"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "down")} style= "top: {+ item.height*cellSize - 8}px; left: {+ item.width*cellSize/2}px;" class = "sizeButton" id = "down"/>
+                    <input type="button" on:pointerdown={() => changeSize(item, "downright")} style= "top: {+ item.height*cellSize -8}px; left: {-8 + item.width*cellSize}px;" class = "sizeButton"id ="downright"/>
                 </div>
 
             </div>
@@ -771,15 +802,15 @@ onMount(() => {
     </article>
 </main>
 
-<aside class="selectedItem" class:invisible = {selectedItem.name == "none" || mousedown == false || selectType != "itemPlace"} style="top: {mousePos.y + scrollY - placementOffset.y}px; left: {mousePos.x - placementOffset.x}px; height: {selectedItem.height *20}px; width: {selectedItem.width*20}px;" >
+<aside class="selectedItem" class:invisible = {selectedItem.name == "none" || mousedown == false || selectType != "itemPlace"} style="top: {mousePos.y + scrollY - placementOffset.y}px; left: {mousePos.x - placementOffset.x}px; height: {selectedItem.height *cellSize}px; width: {selectedItem.width*cellSize}px;" >
     <h2>{selectedItem.name}</h2>
 </aside>
 
 <style>
     main {
         display: grid;
-        height: 100%;
-        width: 100%;
+        height: 200dvh;
+        width: 100dvw;
         grid-template-columns: 200px 5fr;
     }
     .colorPicker{
@@ -971,5 +1002,32 @@ onMount(() => {
     }
     #downright{
         cursor: se-resize;
+    }
+    @media (max-width: 1400px){
+        .websiteGrid{
+            grid-template-columns: repeat(60, 10px);
+            grid-template-rows: repeat(80, 10px);
+            margin-top: 20px;
+            
+        }
+        main{
+            height: 110dvh;
+            grid-template-columns: 100px 5fr;
+        }
+        .cell{
+            width: 10px;
+            height: 10px;
+        }
+    }
+    @media (max-width: 800px){
+        .websiteGrid{
+            grid-template-columns: repeat(60, 8px);
+            grid-template-rows: repeat(80, 8px);
+            margin-top: 20px;
+        }
+        .cell{
+            width: 8px;
+            height: 8px;
+        }
     }
 </style>
