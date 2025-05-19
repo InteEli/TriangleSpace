@@ -343,7 +343,10 @@ function copyToClipBoard(id){ // https://www.w3schools.com/howto/howto_js_copy_c
 function updateCellSize(){
     let windowWidth = window.innerWidth;
     let currentCellsize = cellSize;
-    if (windowWidth < 800){
+    if(windowWidth < 500){
+        cellSize = 6;
+    }
+    else if (windowWidth < 800){
         cellSize = 8;
     }
     else if (windowWidth < 1400){
@@ -410,6 +413,11 @@ onMount(() => {
             updateCellSize();
             
         });
+
+        window.addEventListener("touchmove", (event) => {
+            event.preventDefault();
+            mousePos = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        });
         
         if (gridElement) {//copilot suggested this
             const rect = gridElement.getBoundingClientRect();
@@ -441,8 +449,8 @@ onMount(() => {
             </form>
         </section>
     </article>
-    <article style="height: 100%; width: 100%; background-size: cover; background-repeat: no-repeat;" class = "grid" >
-        <section style="height: 100%; width: 100%; background-color: white; padding: 4px;">
+    <article style="background-size: cover; background-repeat: no-repeat;" class = "grid" >
+        <section style="background-color: white; padding: 4px; " class = "settingBackground">
             <div class = "settings">
             <select name="theme" id="theme" bind:value={$currentTheme} on:change={e => {updateTheme(e.target.value);}}>
                 <option value="crimson" style="background-color: black; color: white;">Crimson</option>
@@ -746,7 +754,7 @@ onMount(() => {
         </div>
         </section>
         <div style="display: flex; justify-content: center; align-items: flex-start; width: 100%; height: 100%;">
-        <section class = "websiteGrid" bind:this={gridElement} style="height: {gridSize.y*cellSize}px; width: {gridSize.x*cellSize}px;">
+        <section class = "websiteGrid" bind:this={gridElement}>
             {#each gridArr as cell}
             <div class = "cell" role = "region" tabindex="-1">
                 <input type="button" on:click={() =>{deSelect();}} style="height: 100%; width: 100%;"/>
@@ -855,6 +863,10 @@ onMount(() => {
     cursor: pointer;
     border-radius: 5px; 
 }
+.settingBackground{
+    width: 100%;
+    height: 100%;
+}
 
 .colorGrid button:hover {
     border: 2px solid black; 
@@ -953,6 +965,8 @@ onMount(() => {
         display: grid;
         grid-template-rows: 50px 5fr;
         flex-direction: column;
+        width: 100%;
+        height: 100%;
     }
     .border2{
         background-color: transparent;
@@ -1017,6 +1031,7 @@ onMount(() => {
         .cell{
             width: 10px;
             height: 10px;
+            border-style: solid;
         }
     }
     @media (max-width: 800px){
@@ -1028,6 +1043,39 @@ onMount(() => {
         .cell{
             width: 8px;
             height: 8px;
+        }
+    }
+    @media (max-width: 600px){
+
+        main{
+            height: 200dvh;
+            grid-template-columns: 85px 5fr;
+        }
+        .grid{
+            grid-template-rows: 100px 5fr;
+            width: 100%;
+        }
+        .settings{
+            display: grid;
+            height: 50px;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+        }
+    }
+    @media (max-width: 500px){
+        .websiteGrid{
+            grid-template-columns: repeat(60, 6px);
+            grid-template-rows: repeat(80, 6px);
+            margin-top: 5px;
+            width: 75vw;
+        }
+        .cell{
+            width: 6px;
+            height: 6px;
+        }
+    }
+    @media (max-width: 400px){
+        main{
+            width: 100vw;
         }
     }
 </style>
