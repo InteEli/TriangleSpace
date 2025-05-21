@@ -29,6 +29,7 @@ let dragDirection = "none";
 let gridElement;
 let selectType = "none";
 let mainBackground = "transparent";
+let mainBackgroundImage = "none";
 
 function getSelectedItem(item){
     let selected = items.find(i => i.name == item);
@@ -328,6 +329,7 @@ function changeBackground(type, input){
             let fr = new FileReader(); // https://stackoverflow.com/questions/3814231/loading-an-image-to-a-img-from-input-file
             fr.onload = function () {
             main.style.backgroundImage = "url(" + fr.result + ")";
+            mainBackgroundImage = "url(" + fr.result + ")";
             }
         fr.readAsDataURL(currentlySelectedBackgroundImage);
         }, 0);
@@ -364,7 +366,6 @@ function updateCellSize(){
 onMount(() => {
 
      //copilot suggested this to stop freezeing
-
     function update() {
     if (mousedown && (selectType == "itemSize" || selectType == "cropImage" || selectType == "itemPlace")) {
         updateMousePos(); 
@@ -409,6 +410,7 @@ onMount(() => {
         window.addEventListener("resize", (event) => {
             const rect = gridElement.getBoundingClientRect();
             gridStart = { x: rect.left, y: rect.top }; // Store the grid's top-left corner coordinates
+            gridElement = gridElement
             updateMousePos();
             updateCellSize();
             
@@ -422,6 +424,7 @@ onMount(() => {
         if (gridElement) {//copilot suggested this
             const rect = gridElement.getBoundingClientRect();
             gridStart = { x: rect.left, y: rect.top }; // Store the grid's top-left corner coordinates
+            gridElement = gridElement
         }
         updateCellSize();
     });
@@ -452,7 +455,7 @@ onMount(() => {
     <article style="background-size: cover; background-repeat: no-repeat;" class = "grid" >
         <section style="background-color: white; padding: 4px; " class = "settingBackground">
             <div class = "settings">
-            <select name="theme" id="theme" bind:value={$currentTheme} on:change={e => {updateTheme(e.target.value);}}>
+            <select name="theme" id="theme" style="width: 75px; height: 25px;" bind:value={$currentTheme} on:change={e => {updateTheme(e.target.value);}}>
                 <option value="crimson" style="background-color: black; color: white;">Crimson</option>
                 <option value="skeleton" style="background-color: rgb(68, 6, 118);; color: white;">Skeleton</option> 
                 <option value="sahara" style="background-color: rgb(139, 1, 1); color: white;">Sahara</option>
@@ -465,7 +468,7 @@ onMount(() => {
                 <option value="light" style="background-color: white; color: black;">Light</option>
             </select>
             <div class:invisible = {selectedItem.type != "text" || selectType == "itemPlace"}>
-                <div style="display: flex; flex-direction: row; width: 100%; height: 100%;">
+                <div style="display: flex; flex-direction: row; width: 100%; height: 25px;">
                     <label for="changeFontManually">Manually Change Font Size:</label>
                     <input type="checkbox" id="changeFontManually" bind:checked={selectedItem.changeFontManually}>
                 </div>
@@ -487,7 +490,7 @@ onMount(() => {
                 </div>
             
             <div class:invisible = {selectedItem.type != "text" || selectType == "itemPlace"}>
-                <select name="font" id="font" size="1" class = "button" bind:value={selectedItem.font}  style="height: 100%;" on:change={e => {updateFont(selectedItem, e.target.value);}}>
+                <select name="font" id="font" size="1" class = "button" bind:value={selectedItem.font}  style="height: 25px; width:60px;" on:change={e => {updateFont(selectedItem, e.target.value);}}>
                     <option value="Arial" style="font-family: Arial, Helvetica, sans-serif;">Arial</option> <!--copilot suggested these fonts-->
                     <option value="Arial Black" style="font-family: 'Arial Black', Gadget, sans-serif;">Arial Black</option>
                     <option value="Arial Narrow" style="font-family: 'Arial Narrow', Arial, sans-serif;">Arial Narrow</option>
@@ -724,6 +727,15 @@ onMount(() => {
             selectType = "itemSelect";
         }}}/>
         <aside class = "exportProject" class:invisible = {selectType != "exportProject"}>
+            <h1>Export Project</h1>
+            <h2>Step 1</h2>
+            <p>Go to <a href="https://github.com/InteEli/madeWithTS">github</a> and click on the green code button and choose download ZIP</p>
+            <h2>Step 2</h2>
+            <p>Unzip the file and open the folder in a code editor</p>
+            <h2>Step 3</h2>
+            <p>Write npm install in the terminal</p>
+            <h2>Step 4</h2>
+            <p>Copy the code below and paste it in the script tag of src/routes/+page.svelte</p>
             <textarea id = "codeExport" readonly style="width: 100%; height: 200px;">
                 {`let itemsInGrid = [${itemsInGrid.map(item => ` 
         {
@@ -735,6 +747,7 @@ onMount(() => {
             type: "${item.type}",
             id: ${item.id},
             fontSize: "${String(parseFloat(item.fontSize)/cellSize*20)+"px"}",
+            baseFontSize: "${String(parseFloat(item.fontSize)/cellSize*20)+"px"}",
             changeFontManually: ${item.changeFontManually},
             font: "${item.font}",
             color: "${item.color}",
@@ -746,15 +759,21 @@ onMount(() => {
                 baseWidth: ${item.cropValues.baseWidth},
                 baseHeight: ${item.cropValues.baseHeight}
             }
-                }`).join(",\n")}];`}
+                }`).join(",\n")}];
+            let mainBackground = "${mainBackground}";
+            let mainBackgroundImage = "${mainBackgroundImage}";
+                `}
             </textarea><!--copilot helped with this because there was other no easy way to show the list with object as written in code-->
-        <input type="button" value="Copy to ClipBoard" on:click={() => {copyToClipBoard("codeExport")}}/>
+            <input type="button" value="Copy to ClipBoard" on:click={() => {copyToClipBoard("codeExport")}}/>
+            <h2>Step 5</h2>
+            <p>Write npm run dev in the terminal and you should have your own website</p>
+
         </aside>
 
         </div>
         </section>
         <div style="display: flex; justify-content: center; align-items: flex-start; width: 100%; height: 100%;">
-        <section class = "websiteGrid" bind:this={gridElement}>
+        <section class = "websiteGrid" bind:this={gridElement} style="width: {gridSize.x*cellSize}; height: {gridSize.y*cellSize};">
             {#each gridArr as cell}
             <div class = "cell" role = "region" tabindex="-1">
                 <input type="button" on:click={() =>{deSelect();}} style="height: 100%; width: 100%;"/>
@@ -863,9 +882,23 @@ onMount(() => {
     cursor: pointer;
     border-radius: 5px; 
 }
+a{
+    color: blue;
+    text-decoration: none;
+}
 .settingBackground{
     width: 100%;
     height: 100%;
+}
+h1{
+    font-size: 20px;
+    font-family: 'Times New Roman', Times, serif;
+    color: black;
+}
+h2{
+    font-size: 17px;
+    font-family: 'Times New Roman', Times, serif;
+    color: black;
 }
 
 .colorGrid button:hover {
@@ -875,8 +908,6 @@ onMount(() => {
         display: grid;
         grid-template-columns: repeat(60, 20px);
         grid-template-rows: repeat(80, 20px);
-        height: 100%;
-        width: 100%;
         justify-content: center;
         align-items: center;
         position: relative;
@@ -1048,7 +1079,7 @@ onMount(() => {
     @media (max-width: 600px){
 
         main{
-            height: 200dvh;
+            height: 100dvh;
             grid-template-columns: 85px 5fr;
         }
         .grid{
@@ -1058,7 +1089,8 @@ onMount(() => {
         .settings{
             display: grid;
             height: 50px;
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
         }
     }
     @media (max-width: 500px){
@@ -1066,7 +1098,6 @@ onMount(() => {
             grid-template-columns: repeat(60, 6px);
             grid-template-rows: repeat(80, 6px);
             margin-top: 5px;
-            width: 75vw;
         }
         .cell{
             width: 6px;
@@ -1076,6 +1107,16 @@ onMount(() => {
     @media (max-width: 400px){
         main{
             width: 100vw;
+        }
+        .websiteGrid{
+            grid-template-columns: repeat(60, 5px);
+            grid-template-rows: repeat(80, 5px);
+            margin-top: 5px;
+            width: 75vw;
+        }
+        .cell{
+            width: 5px;
+            height: 5px;
         }
     }
 </style>
