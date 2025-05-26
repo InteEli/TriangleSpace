@@ -420,6 +420,18 @@ onMount(() => {
         window.addEventListener("touchmove", (event) => {
             mousePos = { x: event.touches[0].clientX, y: event.touches[0].clientY };
         });
+        window.addEventListener("touchend", (event) => {
+            mousedown = false;
+            cancelAnimationFrame(animationFrame);
+            if (selectType == "itemPlace") {
+                updateMousePos();
+                placeItem(selectedItem);
+                selectType = "itemSelect";
+            }
+            else if(selectType == "itemSize"){
+                selectType = "itemSelect";
+            }
+        });
         
         if (gridElement) {//copilot suggested this
             const rect = gridElement.getBoundingClientRect();
