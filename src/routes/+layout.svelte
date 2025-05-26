@@ -37,13 +37,13 @@
 		width: 100%;
 		height: 2rem;
 		padding: 0.2rem;
-		background-color: rgb(255, 255, 255);
-		color: black;
+		background-color: #1b0f1e;
+		color: #f5e8da;
 	}
 	a {
 		width: 100%;
 		height: 100%;
-		color: black;
+		color: #f5e8da;
 		text-align: center;
 		padding: 1px;
 		

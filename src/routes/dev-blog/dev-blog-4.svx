@@ -1,0 +1,23 @@
+---
+title: version 1.0.1
+date: "2025-05-26"
+---
+
+# Hello to last dev blog👍👋
+I have now added export with support to everything else added including cropped images😁. It works by reusing alot of code from the main project🥂. 
+I have also added phone support🤯 to both the main website and the exported one🎉🎂🎉😎. It wasn't easy 😭and I needed to change the size of the cells
+in the grid when it gets smaller. It's also not perfect and very janky on a mobile device but it works. I also added alot better styling to the main website🎆🎇 so it looks quite good now.
+That's it for me✨🎉🎊🎇🎈🎈🎆🥳🥳!
+
+## Changes 
+The following changes and implementations have been made in that version of the project:<br>
+*Improved Styling* <br>
+*Bug fixes* <br>
+*Export*<br>
+*Mobile support<br>
+
+## Features
+✅ Export
+✅ Front page
+✅ Phone support
+<br>

@@ -30,6 +30,7 @@ let gridElement;
 let selectType = "none";
 let mainBackground = "transparent";
 let mainBackgroundImage = "none";
+let newTheme = "crimson"
 
 function getSelectedItem(item){
     let selected = items.find(i => i.name == item);
@@ -37,7 +38,7 @@ function getSelectedItem(item){
     selectedItem = {name: selected.name, height: selected.height, width: selected.width, 
         start: {x: 0, y: 0}, end: {x: 0, y: 0}, type: selected.type, id: selected.id, 
         fontSize: fontSize, changeFontManually: selected.changeFontManually, 
-        font: selected.font, color: selected.color, backgroundColor: selected.backgroundColor, src: selected.src, cropValues: selected.cropValues};
+        font: selected.font, color: selected.color, backgroundColor: selected.backgroundColor, src: selected.src, cropValues: JSON.parse(JSON.stringify(selected.cropValues))};
     selectType = "itemPlace";
 }
 function placeItem(item){
@@ -70,7 +71,7 @@ function calPos(Item){
         }
         return {name: Item.name, height: Item.height, width: Item.width, start: start, end: end, 
             type: Item.type, id: newId, fontSize: Item.fontSize, changeFontManually: Item.changeFontManually, 
-            font: Item.font, color: Item.color, backgroundColor: Item.backgroundColor, src: Item.src, cropValues: Item.cropValues};
+            font: Item.font, color: Item.color, backgroundColor: Item.backgroundColor, src: Item.src, cropValues: JSON.parse(JSON.stringify(Item.cropValues))};
     }
     else{
         return null;}}
@@ -166,7 +167,7 @@ function updateMousePos(){
                 else{
                 itemsInGrid[index] = {name : selectedItem.name , height: newHeight, width: newWidth, start: newStart, end: newEnd, type: selectedItem.type, 
                     id: selectedItem.id, fontSize: selectedItem.fontSize, changeFontManually: selectedItem.changeFontManually, font: selectedItem.font, 
-                    color: selectedItem.color, backgroundColor: selectedItem.backgroundColor, src: selectedItem.src, cropValues: selectedItem.cropValues};
+                    color: selectedItem.color, backgroundColor: selectedItem.backgroundColor, src: selectedItem.src, cropValues: JSON.parse(JSON.stringify(selectedItem.cropValues)) };
                 }
                 selectedItem = itemsInGrid[index]
 
@@ -201,7 +202,6 @@ function changeText(item){// changes text when double clicked
     selectedItem = item;
     selectType = "itemText"
     const input = document.getElementById(String(item.id)); //https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/select
-    console.log(input);
     setTimeout(() => {
         input.focus();
     }, 0);}
@@ -223,6 +223,7 @@ function deSelect(){
 
 function updateTheme(theme) {
     $currentTheme = theme;
+    newTheme = theme
 }
 function adjustFontSize(id, innerText) { // changes the font size of the text area using a div element to enable text fit
     let divElement = document.getElementById(-id);
@@ -303,7 +304,6 @@ function cropImage(item, width, height, start, end){
         itemsInGrid[index].cropValues.baseHeight = height;
         itemsInGrid[index].cropValues.cropStart = start;
         itemsInGrid[index].cropValues.cropEnd = end;
-        itemsInGrid[index] = itemsInGrid[index];
     }, 0);
 }
 
@@ -408,16 +408,16 @@ onMount(() => {
             }
         });
         window.addEventListener("resize", (event) => {
+            if (gridElement) {
             const rect = gridElement.getBoundingClientRect();
             gridStart = { x: rect.left, y: rect.top }; // Store the grid's top-left corner coordinates
             gridElement = gridElement
+            }
             updateMousePos();
             updateCellSize();
-            
         });
 
         window.addEventListener("touchmove", (event) => {
-            event.preventDefault();
             mousePos = { x: event.touches[0].clientX, y: event.touches[0].clientY };
         });
         
@@ -446,16 +446,16 @@ onMount(() => {
         </section>
         <section>
             <h2>Image</h2>
-            <form action=""> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file-->
-                <input type="file" accept="image/*" on:change={e => {currentlySelectedImage = e.target.files[0];}}/>
+            <form action="" style="width: 90%;"> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file-->
+                <input type="file" style="width: 100%;" accept="image/*" on:change={e => {currentlySelectedImage = e.target.files[0];}}/>
                 <input type="button" value="Drag from here" on:pointerdown={() => getSelectedItem("image")}/> 
             </form>
         </section>
     </article>
     <article style="background-size: cover; background-repeat: no-repeat;" class = "grid" >
-        <section style="background-color: white; padding: 4px; " class = "settingBackground">
+        <section style="background-color: #1b0f1e; padding: 4px; " class = "settingBackground">
             <div class = "settings">
-            <select name="theme" id="theme" style="width: 75px; height: 25px;" bind:value={$currentTheme} on:change={e => {updateTheme(e.target.value);}}>
+            <select name="theme" id="theme" style="width: 75px; height: 25px; background-color: #1b0f1e;" bind:value={$currentTheme} on:change={e => {updateTheme(e.target.value);}}>
                 <option value="crimson" style="background-color: black; color: white;">Crimson</option>
                 <option value="skeleton" style="background-color: rgb(68, 6, 118);; color: white;">Skeleton</option> 
                 <option value="sahara" style="background-color: rgb(139, 1, 1); color: white;">Sahara</option>
@@ -490,7 +490,7 @@ onMount(() => {
                 </div>
             
             <div class:invisible = {selectedItem.type != "text" || selectType == "itemPlace"}>
-                <select name="font" id="font" size="1" class = "button" bind:value={selectedItem.font}  style="height: 25px; width:60px;" on:change={e => {updateFont(selectedItem, e.target.value);}}>
+                <select name="font" id="font" size="1" class = "button" bind:value={selectedItem.font}  style="height: 25px; width:60px; background-color:#1b0f1e;" on:change={e => {updateFont(selectedItem, e.target.value);}}>
                     <option value="Arial" style="font-family: Arial, Helvetica, sans-serif;">Arial</option> <!--copilot suggested these fonts-->
                     <option value="Arial Black" style="font-family: 'Arial Black', Gadget, sans-serif;">Arial Black</option>
                     <option value="Arial Narrow" style="font-family: 'Arial Narrow', Arial, sans-serif;">Arial Narrow</option>
@@ -534,7 +534,7 @@ onMount(() => {
                 </select>
             </div>
             <div class:invisible = {selectedItem.type != "text" || selectType == "itemPlace"}>
-                <input type="image" src="https://images.icon-icons.com/3264/PNG/512/font_color_icon_207076.png" class = "button" class:selectedButton = {selectType == "changeFontColor"} alt= "Change font color" style="width: 20px; height 30px" on:click={() => {if(selectType != "changeFontColor"){
+                <input type="image" src="font_color_icon_207076.webp.png" class = "button" class:selectedButton = {selectType == "changeFontColor"} alt= "Change font color" style="width: 20px; height 30px" on:click={() => {if(selectType != "changeFontColor"){
                     selectType = "changeFontColor";
                 }
                 else{
@@ -592,7 +592,7 @@ onMount(() => {
             </aside>
             </div>
             <div class:invisible = {selectedItem.type != "text" || selectType == "itemPlace"}>
-                <input type="image" src="https://static-00.iconduck.com/assets.00/background-color-icon-2048x1932-lso2v2wg.png" class = "button" class:selectedButton = {selectType == "changeBackgroundColor"} alt= "Change background color" style="width: 20px; height 25px" on:click={() => {if(selectType != "changeBackgroundColor"){
+                <input type="image" src="background-color-icon-2048x1932-lso2v2wg.png" class = "button" class:selectedButton = {selectType == "changeBackgroundColor"} alt= "Change background color" style="width: 20px; height 25px" on:click={() => {if(selectType != "changeBackgroundColor"){
                     selectType = "changeBackgroundColor";
                 }
                 else{
@@ -706,21 +706,21 @@ onMount(() => {
                         <input type="color" id="customColor" on:input={(e) => changeBackground("color", e.target.value)} />
                     </div>
                     <form action=""> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file-->
-                        <input type="file" accept="image/*" on:change={e => {currentlySelectedBackgroundImage = e.target.files[0];}}/>
+                        <input type="file" accept="image/*" style="width: 180px;" on:change={e => {currentlySelectedBackgroundImage = e.target.files[0];}}/>
                         <input type = "submit" value="Submit" class="button" on:click={() => changeBackground("image", currentlySelectedBackgroundImage)}/>
                     </form>
                 </aside>
             </div>
             <div class:invisible = {selectedItem.type != "image" || selectType == "itemPlace"}>
-                <input type="image" src="https://cdn-icons-png.flaticon.com/512/2301/2301191.png" class = "button" class:selectedButton = {selectType == "cropImage"} alt="Crop image" style="width: 30px; height 30px;" on:click={() => {if(selectType != "cropImage"){
+                <input type="image" src="cropImage.png" class = "button" class:selectedButton = {selectType == "cropImage"} alt="Crop image" style="width: 30px; height 30px;" on:click={() => {if(selectType != "cropImage"){
                     selectType = "cropImage";
                 }
                 else{
                     selectType = "itemSelect";
                 }}}/>
             </div>
-        <input type="image" src="https://cdn-icons-png.flaticon.com/512/542/542724.png" class = "button" alt="Delete Selected Item" style="width: 20px; height 60px;" on:click={() => deleteItem(selectedItem)}/>
-        <input type="image" src="https://www.svgrepo.com/show/62103/export.svg" class = "button" class:selectedButton = {selectType == "exportProject"} alt="Export Project" style="width: 20px; height 60px;" on:click={() => {if(selectType != "exportProject"){
+        <input type="image" src="delete.png" class = "button" alt="Delete Selected Item" style="width: 20px; height 60px;" on:click={() => deleteItem(selectedItem)}/>
+        <input type="image" src="export.png" class = "button" class:selectedButton = {selectType == "exportProject"} alt="Export Project" style="width: 20px; height 60px;" on:click={() => {if(selectType != "exportProject"){
             selectType = "exportProject";
         }
         else{
@@ -762,6 +762,7 @@ onMount(() => {
                 }`).join(",\n")}];
             let mainBackground = "${mainBackground}";
             let mainBackgroundImage = "${mainBackgroundImage}";
+            $currentTheme = "${newTheme}";
                 `}
             </textarea><!--copilot helped with this because there was other no easy way to show the list with object as written in code-->
             <input type="button" value="Copy to ClipBoard" on:click={() => {copyToClipBoard("codeExport")}}/>
@@ -840,16 +841,26 @@ onMount(() => {
         width: 100dvw;
         grid-template-columns: 200px 5fr;
     }
+    input[type="text"]{
+        background-color: #251529;
+    }
+    input[type="file"]{
+        background-color: #251529;
+        color: #f5e8da;
+        border: 1px solid black;
+        border-radius: 5px;
+    }
+
     .colorPicker{
         display: flex;
         position: absolute;
         flex-direction: column;
         padding: 10px;
-        background-color: rgb(243, 243, 243);
+        background-color: #2b192e;
         border-radius: 20px;
         height: 350px;
         width: 200px;
-        color: black;
+        color: #f5e8da;
         font-family: 'Times New Roman', Times, serif;
         z-index: 100;
         margin: 20px;
@@ -859,11 +870,11 @@ onMount(() => {
         position: absolute;
         flex-direction: column;
         padding: 10px;
-        background-color: rgb(243, 243, 243);
+        background-color: #2b192e;
         border-radius: 20px;
         height: 50vh;
         width: 60vw;
-        color: black;
+        color: #f5e8da;
         font-family: 'Times New Roman', Times, serif;
         z-index: 100;
         margin: 20px;
@@ -893,12 +904,12 @@ a{
 h1{
     font-size: 20px;
     font-family: 'Times New Roman', Times, serif;
-    color: black;
+    color: #f5e8da;
 }
 h2{
     font-size: 17px;
     font-family: 'Times New Roman', Times, serif;
-    color: black;
+    color: #f5e8da;
 }
 
 .colorGrid button:hover {
@@ -917,20 +928,20 @@ h2{
         display: flex;
         flex-direction: column;
         padding: 10px;
-        background-color: rgb(236, 236, 236);
+        background-color: #2b192e;
         height: 100%;
         width: 100%;
-        color: black;
+        color: #f5e8da;
     }
     .settings {
         display: flex;
         flex-direction: row;
         padding: 10px;
-        background-color: rgb(243, 243, 243);
+        background-color: #2b192e;
         border-radius: 20px;
         height: 100%;
         width: 100%;
-        color: black;
+        color: #f5e8da;
         font-family: 'Times New Roman', Times, serif;
         gap: 10px;
     }
@@ -946,6 +957,7 @@ h2{
         width: 20px;
         height: 20px;
         z-index: 0;
+        background-color: transparent;
     }
     .cell:hover{
         background-color: rgba(173, 216, 230, 0.258);
